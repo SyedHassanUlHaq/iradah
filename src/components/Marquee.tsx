@@ -1,12 +1,12 @@
 export const Marquee = () => {
     const items = [
-      "Free Shipping on Orders Over PKR 5,000",
+      "Free Shipping on all Orders",
       "·",
       "Premium Quality",
       "·",
       "Made in Pakistan",
       "·",
-      "New Arrivals Weekly",
+      "New Arrivals",
       "·",
       "Quality Guaranteed",
       "·",

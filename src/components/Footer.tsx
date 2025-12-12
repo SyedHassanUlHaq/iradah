@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram, Facebook, Twitter } from "lucide-react";
+import logo from "../../assets/iradah.svg";
 
 export const Footer = () => {
   return (
@@ -9,7 +10,7 @@ export const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="inline-block mb-4">
-              <span className="font-display text-3xl">IRADAH</span>
+              <img src={logo} alt="IRADAH" className="h-10 object-contain dark:invert" />
             </Link>
             <p className="text-background/60 text-sm leading-relaxed max-w-sm">
               Premium apparel from Pakistan. Where willpower meets style. Curated collections for the modern individual.

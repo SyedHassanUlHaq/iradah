@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { ShopifyProduct, formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Eye } from "lucide-react";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -31,12 +33,13 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       selectedOptions: firstVariant.selectedOptions,
     });
 
-    toast.success("Added to cart", {
+    toast.success("Added to cart", { 
       description: node.title,
       position: "top-center",
     });
     
     setCartOpen(true);
+    trackEvent('add_to_cart', { productId: node.id, title: node.title, price: firstVariant?.price?.amount });
   };
 
   return (
@@ -62,11 +65,38 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
             <button
               onClick={handleAddToCart}
-              className="w-full bg-foreground text-background py-3 px-4 flex items-center justify-center gap-2 text-xs font-medium uppercase tracking-wider hover:bg-foreground/90 transition-colors"
+              className="w-full btn-primary py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold uppercase tracking-wider"
             >
               <ShoppingBag className="w-4 h-4" />
-              Quick Add
+              Add To Cart
             </button>
+            <div className="mt-2 flex gap-2">
+              <Dialog>
+                  <DialogTrigger asChild>
+                  <button onClick={() => trackEvent('quick_view', { productId: node.id })} className="w-full bg-background/90 border border-border py-2 px-3 rounded-md text-sm flex items-center justify-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    Quick View
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogTitle>{node.title}</DialogTitle>
+                  <div>
+                    <img src={firstImage.url} alt={firstImage.altText || node.title} className="w-full h-auto object-contain" />
+                    <DialogDescription>
+                      {node.description}
+                    </DialogDescription>
+                    <div className="mt-4">
+                      <button
+                        onClick={(e) => { e.preventDefault(); handleAddToCart(e as any); }}
+                        className="btn-primary w-full py-3"
+                      >
+                        Add To Cart
+                      </button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           {/* Badge */}

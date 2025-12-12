@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronDown } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
+import logo from "../../assets/iradah.svg";
 
 export const Hero = () => {
   const scrollToProducts = () => {
@@ -27,8 +29,9 @@ export const Hero = () => {
           </div>
 
           {/* Main Heading */}
-          <h1 className="font-display text-6xl md:text-8xl lg:text-9xl leading-[0.9] tracking-tight mb-8 opacity-0 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            IRADAH
+          <h1 className="leading-[0.9] tracking-tight mb-8 opacity-0 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <img src={logo} alt="IRADAH" loading="eager" className="mx-auto h-36 md:h-48 lg:h-72 object-contain dark:invert" />
+            <span className="sr-only">IRADAH</span>
           </h1>
 
           {/* Subheading */}
@@ -41,6 +44,7 @@ export const Hero = () => {
             <Link
               to="/products"
               className="btn-primary flex items-center gap-2 group"
+              onClick={() => trackEvent('cta_click', { label: 'Hero Shop Collection' })}
             >
               Shop Collection
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -66,7 +70,7 @@ export const Hero = () => {
             </div>
             <div className="w-px h-8 bg-border" />
             <div className="text-center">
-              <p className="font-display text-2xl">Worldwide</p>
+              <p className="font-display text-2xl">Countrywide</p>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Shipping</p>
             </div>
           </div>

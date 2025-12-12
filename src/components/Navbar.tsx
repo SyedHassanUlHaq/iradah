@@ -2,7 +2,9 @@ import { Link } from "react-router-dom";
 import { ShoppingBag, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/stores/cartStore";
+import { trackEvent } from "@/lib/analytics";
 import { CartDrawer } from "./CartDrawer";
+import logo from "../../assets/iradah.svg";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -19,14 +21,16 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
+      <div className="fixed top-0 left-0 right-0 z-[60] w-full bg-background/95 text-foreground/70 text-xs py-1 border-b border-border/20 text-center">
+        Free Shipping in Pakistan for all orders
+      </div>
+      <nav className="fixed top-3 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center">
-              <span className="font-display text-2xl md:text-3xl tracking-tight">
-                IRADAH
-              </span>
+            <Link to="/" className="flex items-center" aria-label="IRADAH home">
+              <img src={logo} alt="IRADAH" className="h-12 md:h-20 lg:h-28 object-contain dark:invert" />
+              <span className="sr-only">IRADAH</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -45,7 +49,7 @@ export const Navbar = () => {
             {/* Cart & Mobile Menu */}
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setCartOpen(true)}
+                onClick={() => { setCartOpen(true); trackEvent('open_cart'); }}
                 className="relative p-2 hover:bg-secondary rounded-full transition-colors"
               >
                 <ShoppingBag className="w-5 h-5" />

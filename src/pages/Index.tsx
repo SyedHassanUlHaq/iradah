@@ -12,8 +12,8 @@ const Index = () => {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "IRADAH",
-    url: "https://iradah.pk",
-    description: "Premium fashion brand from Pakistan offering hoodies, sweatshirts & trousers for men, women & kids.",
+    url: "https://iradahclothing.com",
+    description: "Premium fashion brand from Pakistan offering curated collections like Pehchaan, Empress, and Unisex Bottoms.",
   };
 
   return (

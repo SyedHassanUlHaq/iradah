@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://iradah.pk/sitemap.xml
+Sitemap: https://iradahclothing.com/sitemap.xml

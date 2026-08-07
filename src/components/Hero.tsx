@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import heroImage from "@/assets/hero-image.jpg";
+import heroImage from "@/assets/hero-image.webp";
 
 export const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -87,7 +87,7 @@ export const Hero = () => {
 
           {/* Subheading */}
           <p className="text-xs md:text-base text-muted-foreground max-w-xs md:max-w-sm mb-6 md:mb-8 opacity-0 animate-fade-in font-light leading-relaxed" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-            Premium T shirts & trousers for men, women & kids. Designed and Manufactured in Pakistan.
+            Discover curated collections designed in Pakistan with premium fabrics and effortless style.
           </p>
 
           {/* CTA Buttons */}
@@ -99,13 +99,8 @@ export const Hero = () => {
               Shop Collection
               <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link to="/collection/unisex" className="btn-outline text-xs md:text-sm px-5 py-3 md:px-8 md:py-4">
-              Unisex
-            </Link>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 md:mt-3 opacity-0 animate-fade-in" style={{ animationDelay: '0.55s', animationFillMode: 'forwards' }}>
-            <Link to="/collection/kids" className="btn-outline text-xs md:text-sm px-5 py-3 md:px-8 md:py-4">
-              Kids
+            <Link to="/collection/unisex-bottoms" className="btn-outline text-xs md:text-sm px-5 py-3 md:px-8 md:py-4">
+              Unisex Bottoms
             </Link>
           </div>
 

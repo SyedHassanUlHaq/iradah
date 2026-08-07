@@ -29,22 +29,12 @@ export const Footer = () => {
 
           {/* Shop */}
           <div>
-            <h3 className="text-[10px] uppercase tracking-[0.2em] mb-5 text-background/40">Shop</h3>
+            <h3 className="text-[10px] uppercase tracking-[0.2em] mb-5 text-background/40">Collections</h3>
             <ul className="space-y-2.5">
-              <li><Link to="/collection/mens" className="text-background/60 hover:text-background transition-colors text-sm">Men</Link></li>
-              <li><Link to="/collection/womens" className="text-background/60 hover:text-background transition-colors text-sm">Women</Link></li>
-              <li><Link to="/collection/kids" className="text-background/60 hover:text-background transition-colors text-sm">Kids</Link></li>
+              <li><Link to="/collection/iradahclothing-com-collections-pehchaan-summer-collection" className="text-background/60 hover:text-background transition-colors text-sm">Pehchaan Collection</Link></li>
+              <li><Link to="/collection/empress" className="text-background/60 hover:text-background transition-colors text-sm">Empress</Link></li>
+              <li><Link to="/collection/unisex-bottoms" className="text-background/60 hover:text-background transition-colors text-sm">Unisex Bottoms</Link></li>
               <li><Link to="/products" className="text-background/60 hover:text-background transition-colors text-sm">All Products</Link></li>
-            </ul>
-          </div>
-
-          {/* Categories */}
-          <div>
-            <h3 className="text-[10px] uppercase tracking-[0.2em] mb-5 text-background/40">Categories</h3>
-            <ul className="space-y-2.5">
-              <li><Link to="/collection/hoodies" className="text-background/60 hover:text-background transition-colors text-sm">Hoodies</Link></li>
-              <li><Link to="/collection/sweatshirts" className="text-background/60 hover:text-background transition-colors text-sm">Sweatshirts</Link></li>
-              <li><Link to="/collection/trousers" className="text-background/60 hover:text-background transition-colors text-sm">Trousers</Link></li>
             </ul>
           </div>
 

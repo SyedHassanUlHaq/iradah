@@ -3,6 +3,7 @@ import { ShoppingBag, Menu, X, Search, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
 import { CartDrawer } from "./CartDrawer";
+import { fetchCollections } from "@/lib/shopify";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -10,18 +11,8 @@ export const Navbar = () => {
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalItems = useCartStore((state) => state.getTotalItems());
   const setCartOpen = useCartStore((state) => state.setOpen);
-
-  const shopCategories = [
-    { name: "Men", path: "/collection/men" },
-    { name: "Women", path: "/collection/women" },
-    { name: "Kids", path: "/collection/kids" },
-  ];
-
-  const productCategories = [
-    { name: "Hoodies", path: "/collection/hoodies" },
-    { name: "Sweatshirts", path: "/collection/sweatshirts" },
-    { name: "Trousers", path: "/collection/trousers" },
-  ];
+  const [collections, setCollections] = useState<Array<{ handle: string; title: string }>>([]);
+  const [loadingCollections, setLoadingCollections] = useState(true);
 
   const handleDropdownEnter = () => {
     if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
@@ -36,6 +27,21 @@ export const Navbar = () => {
     return () => {
       if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const loadCollections = async () => {
+      try {
+        const data = await fetchCollections(20);
+        setCollections(data);
+      } catch (error) {
+        console.error("Failed to load collections:", error);
+      } finally {
+        setLoadingCollections(false);
+      }
+    };
+
+    loadCollections();
   }, []);
 
   return (
@@ -67,34 +73,23 @@ export const Navbar = () => {
                 
                 {shopDropdownOpen && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3">
-                    <div className="bg-card border border-border/60 shadow-card min-w-[280px] p-5 animate-fade-in">
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] mb-3">By Audience</p>
-                          {shopCategories.map(cat => (
+                    <div className="bg-card border border-border/60 shadow-card min-w-[320px] p-5 animate-fade-in">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] mb-3">Collections</p>
+                        {loadingCollections ? (
+                          <p className="text-sm text-foreground/70">Loading...</p>
+                        ) : (
+                          collections.map(collection => (
                             <Link
-                              key={cat.name}
-                              to={cat.path}
+                              key={collection.handle}
+                              to={`/collection/${collection.handle}`}
                               onClick={() => setShopDropdownOpen(false)}
                               className="block py-1.5 text-sm text-foreground/70 hover:text-foreground transition-colors"
                             >
-                              {cat.name}
+                              {collection.title}
                             </Link>
-                          ))}
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] mb-3">By Category</p>
-                          {productCategories.map(cat => (
-                            <Link
-                              key={cat.name}
-                              to={cat.path}
-                              onClick={() => setShopDropdownOpen(false)}
-                              className="block py-1.5 text-sm text-foreground/70 hover:text-foreground transition-colors"
-                            >
-                              {cat.name}
-                            </Link>
-                          ))}
-                        </div>
+                          ))
+                        )}
                       </div>
                       <div className="border-t border-border mt-4 pt-3">
                         <Link
@@ -110,8 +105,6 @@ export const Navbar = () => {
                 )}
               </div>
 
-              <Link to="/collection/unisex" className="nav-link">Unisex</Link>
-              <Link to="/collection/kids" className="nav-link">Kids</Link>
             </div>
 
             {/* Actions */}
@@ -143,19 +136,22 @@ export const Navbar = () => {
               <div className="flex flex-col space-y-1">
                 <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="py-3 text-sm uppercase tracking-wider text-foreground font-medium">Home</Link>
                 
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] pt-4 pb-2">Shop by Audience</p>
-                {shopCategories.map(cat => (
-                  <Link key={cat.name} to={cat.path} onClick={() => setIsMobileMenuOpen(false)} className="py-2.5 text-sm text-foreground/70 hover:text-foreground transition-colors pl-3 border-l-2 border-border hover:border-foreground">
-                    {cat.name}
-                  </Link>
-                ))}
-                
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] pt-4 pb-2">Shop by Category</p>
-                {productCategories.map(cat => (
-                  <Link key={cat.name} to={cat.path} onClick={() => setIsMobileMenuOpen(false)} className="py-2.5 text-sm text-foreground/70 hover:text-foreground transition-colors pl-3 border-l-2 border-border hover:border-foreground">
-                    {cat.name}
-                  </Link>
-                ))}
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] pt-4 pb-2">Collections</p>
+                {loadingCollections ? (
+                  <p className="py-2.5 text-sm text-foreground/70 pl-3">Loading...</p>
+                ) : (
+                  collections.map(collection => (
+                    <Link
+                      key={collection.handle}
+                      to={`/collection/${collection.handle}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="py-2.5 text-sm text-foreground/70 hover:text-foreground transition-colors pl-3 border-l-2 border-border hover:border-foreground"
+                    >
+                      {collection.title}
+                    </Link>
+                  ))
+                )}
+
                 
                 <div className="pt-4 border-t border-border mt-2">
                   <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="py-3 text-sm uppercase tracking-wider text-foreground font-medium flex items-center gap-2">

@@ -1,33 +1,35 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import unisexImage from "@/assets/unisex-banner.jpg";
+import { useEffect, useState } from "react";
+import { fetchCollections } from "@/lib/shopify";
 
 const unisex = {
-  name: "Unisex",
-  description: "Fashion without boundaries",
+  name: "Explore Collections",
+  description: "Discover the latest curated drops from IRADAH.",
   path: "/products",
   image: unisexImage,
 };
 
-const productTypes = [
-  {
-    name: "Hoodies",
-    path: "/collection/hoodies",
-    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&auto=format&fit=crop",
-  },
-  {
-    name: "Sweatshirts",
-    path: "/collection/sweatshirts",
-    image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&auto=format&fit=crop",
-  },
-  {
-    name: "Trousers",
-    path: "/collection/trousers",
-    image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&auto=format&fit=crop",
-  },
-];
-
 export const CategoryBanner = () => {
+  const [collections, setCollections] = useState<Array<{ handle: string; title: string; image?: { url: string; altText: string | null } }>>([]);
+  const [loadingCollections, setLoadingCollections] = useState(true);
+
+  useEffect(() => {
+    const loadCollections = async () => {
+      try {
+        const data = await fetchCollections(20);
+        setCollections(data);
+      } catch (error) {
+        console.error("Failed to load collections:", error);
+      } finally {
+        setLoadingCollections(false);
+      }
+    };
+
+    loadCollections();
+  }, []);
+
   return (
     <section className="py-14 md:py-28 bg-background">
       <div className="container mx-auto px-4">
@@ -66,25 +68,33 @@ export const CategoryBanner = () => {
 
         {/* Product Type Strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4">
-          {productTypes.map((type, index) => (
-            <Link
-              key={type.name}
-              to={type.path}
-              className="group relative aspect-[2/1] sm:aspect-[3/2] overflow-hidden bg-card opacity-0 animate-fade-in"
-              style={{ animationDelay: `${(index + 1) * 0.1}s`, animationFillMode: 'forwards' }}
-            >
-              <img
-                src={type.image}
-                alt={`Shop ${type.name}`}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-foreground/40 group-hover:bg-foreground/50 transition-colors" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <h3 className="font-display text-lg sm:text-xl md:text-2xl text-background tracking-wide">{type.name}</h3>
-              </div>
-            </Link>
-          ))}
+          {loadingCollections ? (
+            <div className="col-span-full text-center py-8 text-muted-foreground">Loading collections...</div>
+          ) : (
+            collections.map((collection, index) => (
+              <Link
+                key={collection.handle}
+                to={`/collection/${collection.handle}`}
+                className="group relative aspect-[2/1] sm:aspect-[3/2] overflow-hidden bg-card opacity-0 animate-fade-in"
+                style={{ animationDelay: `${(index + 1) * 0.1}s`, animationFillMode: 'forwards' }}
+              >
+                {collection.image ? (
+                  <img
+                    src={collection.image.url}
+                    alt={collection.image.altText || `Shop ${collection.title}`}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="absolute inset-0 w-full h-full bg-muted" />
+                )}
+                <div className="absolute inset-0 bg-foreground/40 group-hover:bg-foreground/50 transition-colors" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <h3 className="font-display text-lg sm:text-xl md:text-2xl text-background tracking-wide">{collection.title}</h3>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </section>

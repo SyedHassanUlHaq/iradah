@@ -11,6 +11,7 @@ export interface ShopifyProduct {
     title: string;
     description: string;
     handle: string;
+    createdAt: string;
     priceRange: {
       minVariantPrice: {
         amount: string;
@@ -53,6 +54,10 @@ export interface ShopifyCollection {
   title: string;
   description: string;
   handle: string;
+  image?: {
+    url: string;
+    altText: string | null;
+  };
   products: {
     edges: ShopifyProduct[];
   };
@@ -67,6 +72,7 @@ const STOREFRONT_QUERY = `
           title
           description
           handle
+          createdAt
           priceRange {
             minVariantPrice {
               amount
@@ -160,6 +166,10 @@ const COLLECTION_BY_HANDLE_QUERY = `
       title
       description
       handle
+      image {
+        url
+        altText
+      }
       products(first: $first) {
         edges {
           node {
@@ -290,6 +300,29 @@ export async function fetchProducts(first: number = 100, query?: string): Promis
   const data = await storefrontApiRequest(STOREFRONT_QUERY, { first, query });
   if (!data) return [];
   return data.data.products.edges;
+}
+
+const COLLECTIONS_QUERY = `
+  query GetCollections($first: Int!) {
+    collections(first: $first) {
+      edges {
+        node {
+          handle
+          title
+          image {
+            url
+            altText
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function fetchCollections(first: number = 20): Promise<Array<{ handle: string; title: string; image?: { url: string; altText: string | null } }>> {
+  const data = await storefrontApiRequest(COLLECTIONS_QUERY, { first });
+  if (!data) return [];
+  return data.data.collections.edges.map((edge: { node: { handle: string; title: string; image?: { url: string; altText: string | null } } }) => edge.node);
 }
 
 export async function fetchCollectionByHandle(handle: string, first: number = 100): Promise<ShopifyCollection | null> {

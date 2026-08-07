@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = "IRADAH Clothing";
-const DEFAULT_DESCRIPTION = "Shop premium hoodies, sweatshirts & trousers for men, women & kids. Quality fashion from Pakistan — minimal designs, bold comfort.";
+const DEFAULT_DESCRIPTION = "Shop premium collections from Pakistan — curated wardrobes, effortless style, and quality craftsmanship.";
 const BASE_URL = "https://iradahclothing.com";
 
 export const SEO = ({

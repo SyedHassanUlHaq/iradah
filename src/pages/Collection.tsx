@@ -117,9 +117,11 @@ const Collection = () => {
         <div className="bg-secondary/30 py-16 md:py-24 text-center">
           <div className="container mx-auto px-4">
             <span className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Collection</span>
-            <h1 className="font-display text-5xl md:text-7xl mt-2">{info.title}</h1>
+            <h1 className="font-display text-5xl md:text-7xl mt-2">
+              {collectionTitle ?? info?.title ?? "Collection"}
+            </h1>
             <p className="text-muted-foreground mt-4 max-w-md mx-auto text-sm">
-              {info.description}
+              {collectionDescription ?? info?.description ?? "Browse this collection."}
             </p>
           </div>
         </div>

@@ -11,8 +11,14 @@ export const FeaturedProducts = () => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const data = await fetchProducts(8);
-        setProducts(data);
+        const data = await fetchProducts(50);
+        const newest = [...data]
+          .sort(
+            (a, b) =>
+              new Date(b.node.createdAt).getTime() - new Date(a.node.createdAt).getTime()
+          )
+          .slice(0, 8);
+        setProducts(newest);
       } catch (error) {
         console.error("Failed to load products:", error);
       } finally {

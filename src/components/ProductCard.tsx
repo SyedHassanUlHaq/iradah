@@ -103,6 +103,11 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               node.priceRange.minVariantPrice.currencyCode
             )}
           </p>
+          {node.description && (
+            <p className="text-muted-foreground text-xs mt-1.5 line-clamp-2">
+              {node.description.split('\n')[0] || node.description}
+            </p>
+          )}
         </div>
       </Link>
     </div>

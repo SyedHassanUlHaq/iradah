@@ -58,7 +58,7 @@ const Products = () => {
     <div className="min-h-screen bg-background">
       <SEO
         title="All Products"
-        description="Browse the full IRADAH collection — hoodies, sweatshirts & trousers for men, women & kids."
+        description="Browse the full IRADAH collection — curated fashion for every wardrobe."
         canonical="/products"
       />
       <Navbar />

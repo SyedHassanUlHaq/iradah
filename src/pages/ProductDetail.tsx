@@ -8,6 +8,73 @@ import { SEO } from "@/components/SEO";
 import { Loader2, Minus, Plus, ChevronLeft, Truck, Shield, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
+const formatDescription = (text: string) => {
+  if (!text) return { sections: [], images: [] };
+  
+  // Extract images first (img tags)
+  const images: string[] = [];
+  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+  let imgMatch;
+  while ((imgMatch = imgRegex.exec(text)) !== null) {
+    images.push(imgMatch[1]);
+  }
+  
+  // Remove img tags from text
+  let cleanText = text.replace(/<img[^>]+>/gi, '');
+  
+  // List of known section headers to look for
+  const sectionHeaders = [
+    'Fabric', 'Fit', 'Neckline', 'Front', 'Back', 'Colors Available', 'Care', 
+    'Note', 'Delivery', 'Description', 'Material', 'Size', 'Weight', 'Specifications'
+  ];
+  
+  // Create a regex pattern that matches any of the section headers followed by a colon
+  const pattern = new RegExp(`(${sectionHeaders.join('|')}):\\s*`, 'gi');
+  
+  // Split the text by section headers
+  const parts = cleanText.split(pattern);
+  
+  const sections: Array<{ label?: string; content: string[] }> = [];
+  
+  // Process parts: they alternate between headers and content
+  if (parts[0] && !sectionHeaders.some(h => h.toLowerCase() === parts[0].toLowerCase())) {
+    // First part is intro text without a header
+    const introLines = parts[0]
+      .trim()
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    if (introLines.length > 0) {
+      sections.push({ content: introLines });
+    }
+  }
+  
+  for (let i = sectionHeaders.some(h => h.toLowerCase() === (parts[0] || '').toLowerCase()) ? 0 : 1; i < parts.length; i += 2) {
+    const header = parts[i];
+    const content = parts[i + 1];
+    
+    if (header && content) {
+      const lines = content
+        .trim()
+        .split(/[\n–-]/) // Split by newlines and dashes
+        .map((line: string) => line.trim())
+        .filter((line: string) => line.length > 0);
+      
+      if (lines.length > 0) {
+        sections.push({
+          label: header.trim(),
+          content: lines
+        });
+      }
+    }
+  }
+  
+  return {
+    sections: sections.length > 0 ? sections : [{ content: [cleanText] }],
+    images
+  };
+};
+
 const ProductDetail = () => {
   const { handle } = useParams<{ handle: string }>();
   const [product, setProduct] = useState<ShopifyProduct['node'] | null>(null);
@@ -275,8 +342,42 @@ const ProductDetail = () => {
               {/* Description */}
               {product.description && (
                 <div className="pt-6 border-t border-border">
-                  <h3 className="text-xs font-medium uppercase tracking-wider mb-3">Description</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{product.description}</p>
+                  <h3 className="text-xs font-medium uppercase tracking-wider mb-4">Description</h3>
+                  {(() => {
+                    const { sections, images } = formatDescription(product.description);
+                    return (
+                      <>
+                        <div className="text-muted-foreground text-sm space-y-3">
+                          {sections.map((section, idx) => (
+                            <div key={idx}>
+                              {section.label && (
+                                <p className="font-medium text-foreground/80 mb-1.5">{section.label}:</p>
+                              )}
+                              <div className={section.label ? "ml-2 space-y-1" : "space-y-1"}>
+                                {section.content.map((line, lineIdx) => (
+                                  <p key={lineIdx} className="leading-relaxed">
+                                    {section.label && lineIdx > 0 ? "• " : ""}{line}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {images.length > 0 && (
+                          <div className="mt-4 space-y-3">
+                            {images.map((imageSrc, idx) => (
+                              <img
+                                key={idx}
+                                src={imageSrc}
+                                alt="Product size chart"
+                                className="w-full max-w-md border border-border rounded"
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>

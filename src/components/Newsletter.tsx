@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 export const Newsletter = () => {
@@ -16,27 +16,27 @@ export const Newsletter = () => {
   };
 
   return (
-    <section className="py-24 bg-background border-t border-border">
-      <div className="container mx-auto px-4">
-        <div className="max-w-xl mx-auto text-center">
-          <span className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Newsletter</span>
-          <h2 className="font-display text-4xl md:text-5xl mt-2 mb-4">Stay Updated</h2>
-          <p className="text-muted-foreground mb-8">
-            Subscribe for exclusive offers, new arrivals, and style inspiration.
+    <section className="py-14 md:py-28 bg-secondary/40">
+      <div className="container mx-auto px-5 md:px-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <Mail className="w-7 h-7 md:w-8 md:h-8 mx-auto text-muted-foreground mb-4 md:mb-5" />
+          <h2 className="font-display text-2xl md:text-4xl mb-2 md:mb-3">Join the Family</h2>
+          <p className="text-muted-foreground text-xs md:text-sm mb-6 md:mb-8 max-w-md mx-auto">
+            Be the first to know about new drops, exclusive deals, and style inspiration delivered to your inbox.
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email address"
-              className="flex-1 bg-secondary border-0 px-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground transition-shadow text-sm"
+              placeholder="Enter your email"
+              className="flex-1 bg-background border border-border px-5 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-shadow text-sm"
               required
             />
             <button
               type="submit"
-              className="btn-primary flex items-center justify-center gap-2 group whitespace-nowrap"
+              className="btn-primary flex items-center justify-center gap-2 group whitespace-nowrap px-6"
             >
               Subscribe
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -44,7 +44,7 @@ export const Newsletter = () => {
           </form>
 
           <p className="text-[10px] text-muted-foreground mt-4 uppercase tracking-wider">
-            No spam, unsubscribe anytime
+            No spam · Unsubscribe anytime
           </p>
         </div>
       </div>

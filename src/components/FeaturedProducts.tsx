@@ -24,19 +24,19 @@ export const FeaturedProducts = () => {
   }, []);
 
   return (
-    <section id="featured-products" className="py-24 bg-background">
+    <section id="featured-products" className="py-14 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 md:mb-14">
           <div>
-            <span className="text-xs text-muted-foreground uppercase tracking-[0.2em]">New Arrivals</span>
-            <h2 className="font-display text-4xl md:text-5xl mt-2">Featured</h2>
+            <span className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-[0.2em]">Curated for You</span>
+            <h2 className="font-display text-3xl md:text-5xl mt-2">New Arrivals</h2>
           </div>
           <Link 
             to="/products"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mt-4 md:mt-0 group"
           >
-            <span className="text-xs uppercase tracking-wider">View All Products</span>
+            <span className="text-xs uppercase tracking-wider font-medium">View All</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
@@ -52,7 +52,7 @@ export const FeaturedProducts = () => {
             <p className="text-muted-foreground text-sm mt-2">Check back soon for new arrivals!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
             {products.map((product, index) => (
               <ProductCard key={product.node.id} product={product} index={index} />
             ))}

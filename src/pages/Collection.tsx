@@ -3,47 +3,85 @@ import { useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
-import { ShopifyProduct, fetchProducts } from "@/lib/shopify";
+import { ShopifyProduct, fetchCollectionByHandle } from "@/lib/shopify";
+import { SEO } from "@/components/SEO";
 import { Loader2 } from "lucide-react";
 
-const collectionInfo: Record<string, { title: string; description: string; query: string }> = {
+const collectionInfo: Record<string, { title: string; description: string }> = {
+  mens: {
+    title: "Men's Collection",
+    description: "Refined essentials crafted for the modern man.",
+  },
+  womens: {
+    title: "Women's Collection",
+    description: "Elegant pieces designed for effortless style.",
+  },
+  kids: {
+    title: "Kids' Collection",
+    description: "Playful comfort for the little ones.",
+  },
   hoodies: {
     title: "Hoodies",
     description: "Premium hoodies designed for comfort and style.",
-    query: "hoodie",
   },
   sweatshirts: {
     title: "Sweatshirts",
     description: "Everyday essentials for the modern wardrobe.",
-    query: "sweatshirt",
   },
   trousers: {
     title: "Trousers",
     description: "Refined comfort for every occasion.",
-    query: "sweatpants OR trousers OR pants",
   },
+};
+
+const collectionHandleMap: Record<string, string> = {
+  mens: "men",
+  womens: "women",
+  men: "men",
+  women: "women",
+  kids: "kids",
+  unisex: "unisex",
+  hoodies: "hoodies",
+  sweatshirts: "sweatshirts",
+  trousers: "trousers",
 };
 
 const Collection = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
+  const [collectionTitle, setCollectionTitle] = useState<string | null>(null);
+  const [collectionDescription, setCollectionDescription] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const info = category ? collectionInfo[category] : null;
+  const resolvedHandle = category ? collectionHandleMap[category.toLowerCase()] ?? category : null;
 
   useEffect(() => {
     const loadProducts = async () => {
-      if (!info) return;
-      
+      if (!resolvedHandle) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setNotFound(false);
       try {
-        const allProducts = await fetchProducts(50);
-        const filtered = allProducts.filter(product => 
-          product.node.title.toLowerCase().includes(info.query.toLowerCase().split(' OR ')[0])
+        const collection = await fetchCollectionByHandle(resolvedHandle, 100);
+        if (!collection) {
+          setNotFound(true);
+          return;
+        }
+
+        setProducts(collection.products.edges);
+        setCollectionTitle(collection.title);
+        setCollectionDescription(
+          collection.description || info?.description || `Browse the ${collection.title} collection.`
         );
-        setProducts(filtered.length > 0 ? filtered : allProducts.slice(0, 8));
       } catch (error) {
-        console.error("Failed to load products:", error);
+        console.error("Failed to load collection:", error);
+        setNotFound(true);
       } finally {
         setLoading(false);
       }
@@ -52,9 +90,10 @@ const Collection = () => {
     loadProducts();
   }, [category, info]);
 
-  if (!info) {
+  if (notFound) {
     return (
       <div className="min-h-screen bg-background">
+        <SEO title="Collection Not Found" />
         <Navbar />
         <div className="pt-20 flex items-center justify-center min-h-[60vh]">
           <p className="text-muted-foreground">Collection not found</p>
@@ -66,6 +105,11 @@ const Collection = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={collectionTitle ?? info?.title ?? "Collection"}
+        description={collectionDescription ?? info?.description ?? "Browse this collection."}
+        canonical={`/collection/${category}`}
+      />
       <Navbar />
       
       <main className="pt-16 md:pt-20">

@@ -2,9 +2,8 @@ import { Link } from "react-router-dom";
 import { ShopifyProduct, formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
 import { ShoppingBag, Eye } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: ShopifyProduct;
@@ -16,7 +15,9 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const setCartOpen = useCartStore((state) => state.setOpen);
   const { node } = product;
   const firstImage = node.images.edges[0]?.node;
+  const secondImage = node.images.edges[1]?.node;
   const firstVariant = node.variants.edges[0]?.node;
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,70 +34,55 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       selectedOptions: firstVariant.selectedOptions,
     });
 
-    toast.success("Added to cart", { 
+    toast.success("Added to bag", {
       description: node.title,
       position: "top-center",
     });
     
     setCartOpen(true);
-    trackEvent('add_to_cart', { productId: node.id, title: node.title, price: firstVariant?.price?.amount });
   };
 
   return (
     <div 
       className="product-card group opacity-0 animate-fade-in"
-      style={{ animationDelay: `${index * 0.08}s` }}
+      style={{ animationDelay: `${index * 0.06}s`, animationFillMode: 'forwards' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/product/${node.handle}`}>
-        <div className="relative aspect-[3/4] overflow-hidden bg-secondary/30">
+        <div className="relative aspect-[3/4] overflow-hidden bg-secondary/20">
           {firstImage ? (
-            <img
-              src={firstImage.url}
-              alt={firstImage.altText || node.title}
-              className="product-image w-full h-full object-cover"
-            />
+            <>
+              <img
+                src={firstImage.url}
+                alt={firstImage.altText || node.title}
+                className={`product-image w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${isHovered && secondImage ? 'opacity-0' : 'opacity-100'}`}
+                loading="lazy"
+              />
+              {secondImage && (
+                <img
+                  src={secondImage.url}
+                  alt={secondImage.altText || `${node.title} alternate`}
+                  className={`product-image w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                  loading="lazy"
+                />
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground">
               No Image
             </div>
           )}
           
-          {/* Quick Add Button */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+          {/* Action Buttons - always visible on mobile, hover on desktop */}
+          <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 flex gap-2 md:translate-y-full md:opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
             <button
               onClick={handleAddToCart}
-              className="w-full btn-primary py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold uppercase tracking-wider"
+              className="flex-1 bg-foreground/95 backdrop-blur-sm text-background py-2.5 md:py-3 flex items-center justify-center gap-2 text-[10px] md:text-xs font-medium uppercase tracking-wider hover:bg-foreground transition-colors"
             >
-              <ShoppingBag className="w-4 h-4" />
-              Add To Cart
+              <ShoppingBag className="w-3 h-3 md:w-3.5 md:h-3.5" />
+              Add to Bag
             </button>
-            <div className="mt-2 flex gap-2">
-              <Dialog>
-                  <DialogTrigger asChild>
-                  <button onClick={() => trackEvent('quick_view', { productId: node.id })} className="w-full bg-background/90 border border-border py-2 px-3 rounded-md text-sm flex items-center justify-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    Quick View
-                  </button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogTitle>{node.title}</DialogTitle>
-                  <div>
-                    <img src={firstImage.url} alt={firstImage.altText || node.title} className="w-full h-auto object-contain" />
-                    <DialogDescription>
-                      {node.description}
-                    </DialogDescription>
-                    <div className="mt-4">
-                      <button
-                        onClick={(e) => { e.preventDefault(); handleAddToCart(e as any); }}
-                        className="btn-primary w-full py-3"
-                      >
-                        Add To Cart
-                      </button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
           </div>
 
           {/* Badge */}
@@ -107,11 +93,11 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           )}
         </div>
         
-        <div className="p-4">
-          <h3 className="text-sm font-medium line-clamp-1 group-hover:underline underline-offset-4">
+        <div className="p-2.5 md:p-4">
+          <h3 className="text-xs md:text-sm font-medium line-clamp-1 group-hover:underline underline-offset-4 decoration-foreground/30">
             {node.title}
           </h3>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground text-xs md:text-sm mt-0.5 md:mt-1">
             {formatPrice(
               node.priceRange.minVariantPrice.amount,
               node.priceRange.minVariantPrice.currencyCode

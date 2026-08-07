@@ -1,60 +1,128 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { ShoppingBag, Menu, X, Search, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
-import { trackEvent } from "@/lib/analytics";
 import { CartDrawer } from "./CartDrawer";
-import logo from "../../assets/iradah.svg";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
+  const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalItems = useCartStore((state) => state.getTotalItems());
   const setCartOpen = useCartStore((state) => state.setOpen);
 
-  const navLinks = [
-    { name: "Home", path: "/" },
+  const shopCategories = [
+    { name: "Men", path: "/collection/men" },
+    { name: "Women", path: "/collection/women" },
+    { name: "Kids", path: "/collection/kids" },
+  ];
+
+  const productCategories = [
     { name: "Hoodies", path: "/collection/hoodies" },
     { name: "Sweatshirts", path: "/collection/sweatshirts" },
     { name: "Trousers", path: "/collection/trousers" },
-    { name: "All", path: "/products" },
   ];
+
+  const handleDropdownEnter = () => {
+    if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
+    setShopDropdownOpen(true);
+  };
+
+  const handleDropdownLeave = () => {
+    dropdownTimeout.current = setTimeout(() => setShopDropdownOpen(false), 200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
+    };
+  }, []);
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-[60] w-full bg-background/95 text-foreground/70 text-xs py-1 border-b border-border/20 text-center">
-        Free Shipping in Pakistan for all orders
-      </div>
-      <nav className="fixed top-3 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center" aria-label="IRADAH home">
-              <img src={logo} alt="IRADAH" className="h-12 md:h-20 lg:h-28 object-contain dark:invert" />
-              <span className="sr-only">IRADAH</span>
+            <Link to="/" className="flex items-center">
+              <span className="font-display text-2xl md:text-3xl tracking-tight">
+                IRADAH
+              </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-10">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className="nav-link"
-                >
-                  {link.name}
-                </Link>
-              ))}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link to="/" className="nav-link">Home</Link>
+              
+              {/* Shop Dropdown */}
+              <div 
+                className="relative"
+                onMouseEnter={handleDropdownEnter}
+                onMouseLeave={handleDropdownLeave}
+              >
+                <button className="nav-link flex items-center gap-1">
+                  Shop
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${shopDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {shopDropdownOpen && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3">
+                    <div className="bg-card border border-border/60 shadow-card min-w-[280px] p-5 animate-fade-in">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] mb-3">By Audience</p>
+                          {shopCategories.map(cat => (
+                            <Link
+                              key={cat.name}
+                              to={cat.path}
+                              onClick={() => setShopDropdownOpen(false)}
+                              className="block py-1.5 text-sm text-foreground/70 hover:text-foreground transition-colors"
+                            >
+                              {cat.name}
+                            </Link>
+                          ))}
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] mb-3">By Category</p>
+                          {productCategories.map(cat => (
+                            <Link
+                              key={cat.name}
+                              to={cat.path}
+                              onClick={() => setShopDropdownOpen(false)}
+                              className="block py-1.5 text-sm text-foreground/70 hover:text-foreground transition-colors"
+                            >
+                              {cat.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="border-t border-border mt-4 pt-3">
+                        <Link
+                          to="/products"
+                          onClick={() => setShopDropdownOpen(false)}
+                          className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          View All Products →
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Link to="/collection/unisex" className="nav-link">Unisex</Link>
+              <Link to="/collection/kids" className="nav-link">Kids</Link>
             </div>
 
-            {/* Cart & Mobile Menu */}
-            <div className="flex items-center space-x-2">
+            {/* Actions */}
+            <div className="flex items-center space-x-1">
               <button
-                onClick={() => { setCartOpen(true); trackEvent('open_cart'); }}
-                className="relative p-2 hover:bg-secondary rounded-full transition-colors"
+                onClick={() => setCartOpen(true)}
+                className="relative p-2.5 hover:bg-secondary rounded-full transition-colors"
               >
                 <ShoppingBag className="w-5 h-5" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-foreground text-background text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-foreground text-background text-[10px] font-bold rounded-full flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
@@ -62,7 +130,7 @@ export const Navbar = () => {
 
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 hover:bg-secondary rounded-full transition-colors"
+                className="md:hidden p-2.5 hover:bg-secondary rounded-full transition-colors"
               >
                 {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -72,17 +140,28 @@ export const Navbar = () => {
           {/* Mobile Navigation */}
           {isMobileMenuOpen && (
             <div className="md:hidden py-6 border-t border-border animate-fade-in">
-              <div className="flex flex-col space-y-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-foreground/70 hover:text-foreground transition-colors py-2 text-sm uppercase tracking-wider"
-                  >
-                    {link.name}
+              <div className="flex flex-col space-y-1">
+                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="py-3 text-sm uppercase tracking-wider text-foreground font-medium">Home</Link>
+                
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] pt-4 pb-2">Shop by Audience</p>
+                {shopCategories.map(cat => (
+                  <Link key={cat.name} to={cat.path} onClick={() => setIsMobileMenuOpen(false)} className="py-2.5 text-sm text-foreground/70 hover:text-foreground transition-colors pl-3 border-l-2 border-border hover:border-foreground">
+                    {cat.name}
                   </Link>
                 ))}
+                
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] pt-4 pb-2">Shop by Category</p>
+                {productCategories.map(cat => (
+                  <Link key={cat.name} to={cat.path} onClick={() => setIsMobileMenuOpen(false)} className="py-2.5 text-sm text-foreground/70 hover:text-foreground transition-colors pl-3 border-l-2 border-border hover:border-foreground">
+                    {cat.name}
+                  </Link>
+                ))}
+                
+                <div className="pt-4 border-t border-border mt-2">
+                  <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="py-3 text-sm uppercase tracking-wider text-foreground font-medium flex items-center gap-2">
+                    All Products
+                  </Link>
+                </div>
               </div>
             </div>
           )}

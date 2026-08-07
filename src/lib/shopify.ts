@@ -49,6 +49,15 @@ export interface ShopifyProduct {
   };
 }
 
+export interface ShopifyCollection {
+  title: string;
+  description: string;
+  handle: string;
+  products: {
+    edges: ShopifyProduct[];
+  };
+}
+
 const STOREFRONT_QUERY = `
   query GetProducts($first: Int!, $query: String) {
     products(first: $first, query: $query) {
@@ -145,6 +154,61 @@ const PRODUCT_BY_HANDLE_QUERY = `
   }
 `;
 
+const COLLECTION_BY_HANDLE_QUERY = `
+  query GetCollectionByHandle($handle: String!, $first: Int!) {
+    collectionByHandle(handle: $handle) {
+      title
+      description
+      handle
+      products(first: $first) {
+        edges {
+          node {
+            id
+            title
+            description
+            handle
+            priceRange {
+              minVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+            images(first: 5) {
+              edges {
+                node {
+                  url
+                  altText
+                }
+              }
+            }
+            variants(first: 10) {
+              edges {
+                node {
+                  id
+                  title
+                  price {
+                    amount
+                    currencyCode
+                  }
+                  availableForSale
+                  selectedOptions {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+            options {
+              name
+              values
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 const CART_CREATE_MUTATION = `
   mutation cartCreate($input: CartInput!) {
     cartCreate(input: $input) {
@@ -222,10 +286,16 @@ export async function storefrontApiRequest(query: string, variables: Record<stri
   return data;
 }
 
-export async function fetchProducts(first: number = 50, query?: string): Promise<ShopifyProduct[]> {
+export async function fetchProducts(first: number = 100, query?: string): Promise<ShopifyProduct[]> {
   const data = await storefrontApiRequest(STOREFRONT_QUERY, { first, query });
   if (!data) return [];
   return data.data.products.edges;
+}
+
+export async function fetchCollectionByHandle(handle: string, first: number = 100): Promise<ShopifyCollection | null> {
+  const data = await storefrontApiRequest(COLLECTION_BY_HANDLE_QUERY, { handle, first });
+  if (!data) return null;
+  return data.data.collectionByHandle;
 }
 
 export async function fetchProductByHandle(handle: string): Promise<ShopifyProduct['node'] | null> {

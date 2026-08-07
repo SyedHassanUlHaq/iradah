@@ -3,22 +3,19 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { ShopifyProduct, fetchProducts } from "@/lib/shopify";
-import { trackEvent } from "@/lib/analytics";
+import { SEO } from "@/components/SEO";
 import { Loader2 } from "lucide-react";
 
 const Products = () => {
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ShopifyProduct[]>([]);
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
-  const [inStockOnly, setInStockOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("featured");
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const data = await fetchProducts(50);
+        const data = await fetchProducts(100);
         setProducts(data);
         setFilteredProducts(data);
       } catch (error) {
@@ -54,23 +51,16 @@ const Products = () => {
         break;
     }
     
-    // Apply search and filters
-    let filtered = sorted.filter((p) => {
-      const title = p.node.title.toLowerCase();
-      const desc = (p.node.description || "").toLowerCase();
-      const matchesQuery = query.trim() === "" || title.includes(query.toLowerCase()) || desc.includes(query.toLowerCase());
-      const categoryTerm = category === 'hoodies' ? 'hoodie' : category === 'sweatshirts' ? 'sweatshirt' : category === 'trousers' ? 'trouser' : category;
-      const matchesCategory = category === "all" || p.node.handle.includes(categoryTerm);
-      const available = p.node.variants.edges.some(v => v.node.availableForSale);
-      const matchesStock = !inStockOnly || available;
-      return matchesQuery && matchesCategory && matchesStock;
-    });
-
-    setFilteredProducts(filtered);
-  }, [sortBy, products, query, category, inStockOnly]);
+    setFilteredProducts(sorted);
+  }, [sortBy, products]);
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="All Products"
+        description="Browse the full IRADAH collection — hoodies, sweatshirts & trousers for men, women & kids."
+        canonical="/products"
+      />
       <Navbar />
       
       <main className="pt-16 md:pt-20">
@@ -88,37 +78,12 @@ const Products = () => {
         {/* Toolbar */}
         <div className="sticky top-16 md:top-20 z-40 bg-background border-b border-border">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+            <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">
                 {filteredProducts.length} Products
               </p>
 
               <div className="flex items-center gap-3">
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="bg-background border border-border px-3 py-2 text-sm rounded-md focus:outline-none"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      trackEvent('search', { query });
-                    }
-                  }}
-                />
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="bg-transparent border-0 text-sm focus:outline-none cursor-pointer"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="hoodies">Hoodies</option>
-                  <option value="sweatshirts">Sweatshirts</option>
-                  <option value="trousers">Trousers</option>
-                </select>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
-                  In stock only
-                </label>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider">Sort:</label>
                 <select
                   value={sortBy}

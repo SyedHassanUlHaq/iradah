@@ -21,7 +21,19 @@ const formatDescription = (text: string) => {
   
   // Remove img tags from text
   let cleanText = text.replace(/<img[^>]+>/gi, '');
-  
+
+  // Convert block-level HTML breaks to newlines, then strip remaining tags/entities
+  cleanText = cleanText
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+
   // List of known section headers to look for
   const sectionHeaders = [
     'Fabric', 'Fit', 'Neckline', 'Front', 'Back', 'Colors Available', 'Care', 
@@ -97,7 +109,10 @@ const ProductDetail = () => {
         setProduct(data);
         
         if (data?.variants.edges.length) {
-          const firstVariant = data.variants.edges[0].node;
+          const firstAvailableVariant = data.variants.edges.find(
+            (v) => v.node.availableForSale
+          )?.node;
+          const firstVariant = firstAvailableVariant || data.variants.edges[0].node;
           setSelectedVariant(firstVariant.id);
           
           const options: Record<string, string> = {};
@@ -155,6 +170,22 @@ const ProductDetail = () => {
   };
 
   const currentVariant = product?.variants.edges.find(v => v.node.id === selectedVariant)?.node;
+
+  const isOptionValueAvailable = (optionName: string, value: string) => {
+    return product?.variants.edges.some(({ node: variant }) => {
+      const matchesValue = variant.selectedOptions.some(
+        (opt) => opt.name === optionName && opt.value === value
+      );
+      if (!matchesValue) return false;
+
+      const matchesOtherSelections = variant.selectedOptions.every((opt) => {
+        if (opt.name === optionName) return true;
+        return selectedOptions[opt.name] === opt.value;
+      });
+
+      return matchesOtherSelections && variant.availableForSale;
+    }) ?? false;
+  };
 
   if (loading) {
     return (
@@ -274,19 +305,29 @@ const ProductDetail = () => {
                       {option.name}: {selectedOptions[option.name]}
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {option.values.map((value) => (
-                        <button
-                          key={value}
-                          onClick={() => handleOptionChange(option.name, value)}
-                          className={`px-5 py-2.5 border text-sm transition-colors ${
-                            selectedOptions[option.name] === value
-                              ? 'border-foreground bg-foreground text-background'
-                              : 'border-border hover:border-foreground'
-                          }`}
-                        >
-                          {value}
-                        </button>
-                      ))}
+                      {option.values.map((value) => {
+                        const available = isOptionValueAvailable(option.name, value);
+                        return (
+                          <button
+                            key={value}
+                            onClick={() => available && handleOptionChange(option.name, value)}
+                            disabled={!available}
+                            aria-disabled={!available}
+                            title={available ? undefined : `${value} - Sold Out`}
+                            className={`px-5 py-2.5 border text-sm transition-colors ${
+                              selectedOptions[option.name] === value
+                                ? 'border-foreground bg-foreground text-background'
+                                : 'border-border hover:border-foreground'
+                            } ${
+                              !available
+                                ? 'opacity-40 cursor-not-allowed line-through decoration-1 hover:border-border'
+                                : ''
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -344,9 +385,21 @@ const ProductDetail = () => {
                 <div className="pt-6 border-t border-border">
                   <h3 className="text-xs font-medium uppercase tracking-wider mb-4">Description</h3>
                   {(() => {
-                    const { sections, images } = formatDescription(product.description);
+                    const { sections, images } = formatDescription(product.descriptionHtml || product.description);
                     return (
                       <>
+                        {images.length > 0 && (
+                          <div className="mb-4 space-y-3">
+                            {images.map((imageSrc, idx) => (
+                              <img
+                                key={idx}
+                                src={imageSrc}
+                                alt="Product size chart"
+                                className="w-full border border-border rounded"
+                              />
+                            ))}
+                          </div>
+                        )}
                         <div className="text-muted-foreground text-sm space-y-3">
                           {sections.map((section, idx) => (
                             <div key={idx}>
@@ -363,18 +416,6 @@ const ProductDetail = () => {
                             </div>
                           ))}
                         </div>
-                        {images.length > 0 && (
-                          <div className="mt-4 space-y-3">
-                            {images.map((imageSrc, idx) => (
-                              <img
-                                key={idx}
-                                src={imageSrc}
-                                alt="Product size chart"
-                                className="w-full max-w-md border border-border rounded"
-                              />
-                            ))}
-                          </div>
-                        )}
                       </>
                     );
                   })()}

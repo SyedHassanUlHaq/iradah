@@ -17,6 +17,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const firstImage = node.images.edges[0]?.node;
   const secondImage = node.images.edges[1]?.node;
   const firstVariant = node.variants.edges[0]?.node;
+  const isSoldOut = node.variants.edges.every((edge) => !edge.node.availableForSale);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -86,7 +87,7 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           </div>
 
           {/* Badge */}
-          {!firstVariant?.availableForSale && (
+          {isSoldOut && (
             <div className="absolute top-3 left-3 bg-foreground text-background px-3 py-1 text-[10px] font-medium uppercase tracking-wider">
               Sold Out
             </div>

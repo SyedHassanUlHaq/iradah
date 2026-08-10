@@ -93,7 +93,7 @@ const Collection = () => {
   if (notFound) {
     return (
       <div className="min-h-screen bg-background">
-        <SEO title="Collection Not Found" />
+        <SEO title="Collection Not Found" noindex />
         <Navbar />
         <div className="pt-20 flex items-center justify-center min-h-[60vh]">
           <p className="text-muted-foreground">Collection not found</p>
@@ -109,6 +109,25 @@ const Collection = () => {
         title={collectionTitle ?? info?.title ?? "Collection"}
         description={collectionDescription ?? info?.description ?? "Browse this collection."}
         canonical={`/collection/${category}`}
+        jsonLd={
+          products.length > 0
+            ? {
+                "@context": "https://schema.org",
+                "@type": "CollectionPage",
+                name: collectionTitle ?? info?.title ?? "Collection",
+                url: `https://iradahclothing.com/collection/${category}`,
+                mainEntity: {
+                  "@type": "ItemList",
+                  itemListElement: products.map((product, index) => ({
+                    "@type": "ListItem",
+                    position: index + 1,
+                    url: `https://iradahclothing.com/product/${product.node.handle}`,
+                    name: product.node.title,
+                  })),
+                },
+              }
+            : undefined
+        }
       />
       <Navbar />
       

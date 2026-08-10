@@ -68,9 +68,9 @@ export const Hero = () => {
         <div className="max-w-xl">
           {/* Brand Name - Large */}
           <div className="opacity-0 animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
-            <h2 className="font-display text-[10px] sm:text-xs uppercase tracking-[0.5em] text-muted-foreground mb-2">
+            <p className="font-display text-[10px] sm:text-xs uppercase tracking-[0.5em] text-muted-foreground mb-2">
               — Introducing
-            </h2>
+            </p>
             <p className="font-display text-5xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.15em] font-semibold mb-3 md:mb-4 leading-none">
               IRADAH
             </p>

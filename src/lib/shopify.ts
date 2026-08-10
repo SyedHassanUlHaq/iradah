@@ -229,6 +229,10 @@ const CART_CREATE_MUTATION = `
         checkoutUrl
         totalQuantity
         cost {
+          subtotalAmount {
+            amount
+            currencyCode
+          }
           totalAmount {
             amount
             currencyCode
@@ -339,7 +343,13 @@ export async function fetchProductByHandle(handle: string): Promise<ShopifyProdu
   return data.data.productByHandle;
 }
 
-export async function createStorefrontCheckout(items: Array<{ variantId: string; quantity: number }>): Promise<string> {
+export interface StorefrontCart {
+  checkoutUrl: string;
+  subtotalAmount: { amount: string; currencyCode: string };
+  totalAmount: { amount: string; currencyCode: string };
+}
+
+export async function createStorefrontCart(items: Array<{ variantId: string; quantity: number }>): Promise<StorefrontCart> {
   const lines = items.map(item => ({
     quantity: item.quantity,
     merchandiseId: item.variantId,
@@ -350,7 +360,7 @@ export async function createStorefrontCheckout(items: Array<{ variantId: string;
   });
 
   if (!cartData) {
-    throw new Error('Failed to create checkout');
+    throw new Error('Failed to create cart');
   }
 
   if (cartData.data.cartCreate.userErrors.length > 0) {
@@ -358,14 +368,19 @@ export async function createStorefrontCheckout(items: Array<{ variantId: string;
   }
 
   const cart = cartData.data.cartCreate.cart;
-  
+
   if (!cart.checkoutUrl) {
     throw new Error('No checkout URL returned from Shopify');
   }
 
   const url = new URL(cart.checkoutUrl);
   url.searchParams.set('channel', 'online_store');
-  return url.toString();
+
+  return {
+    checkoutUrl: url.toString(),
+    subtotalAmount: cart.cost.subtotalAmount,
+    totalAmount: cart.cost.totalAmount,
+  };
 }
 
 export function formatPrice(amount: string, currencyCode: string): string {

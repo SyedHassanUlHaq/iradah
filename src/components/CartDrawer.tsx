@@ -5,19 +5,25 @@ import { useCartStore } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/shopify";
 
 export const CartDrawer = () => {
-  const { 
-    items, 
-    isLoading, 
+  const {
+    items,
+    isLoading,
+    isSyncing,
     isOpen,
-    updateQuantity, 
-    removeItem, 
+    subtotalAmount,
+    totalAmount,
+    updateQuantity,
+    removeItem,
     createCheckout,
     getTotalPrice,
-    setOpen 
+    setOpen
   } = useCartStore();
 
-  const totalPrice = getTotalPrice();
   const currencyCode = items[0]?.price.currencyCode || 'PKR';
+  // Fall back to a naive local sum until the Shopify-priced cart syncs in (e.g. on first load).
+  const subtotal = subtotalAmount ?? { amount: getTotalPrice().toString(), currencyCode };
+  const total = totalAmount ?? subtotal;
+  const hasDiscount = parseFloat(total.amount) < parseFloat(subtotal.amount);
 
   const handleCheckout = async () => {
     const checkoutUrl = await createCheckout();
@@ -96,14 +102,23 @@ export const CartDrawer = () => {
                 ))}
               </div>
               
-              <div className="flex-shrink-0 space-y-4 pt-4 border-t border-border mt-4">
+              <div className="flex-shrink-0 space-y-2 pt-4 border-t border-border mt-4">
+                {hasDiscount && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Subtotal</span>
+                    <span className="text-sm text-muted-foreground line-through">
+                      {formatPrice(subtotal.amount, subtotal.currencyCode)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Subtotal</span>
-                  <span className="text-lg font-display">
-                    {formatPrice(totalPrice.toString(), currencyCode)}
+                  <span className="text-sm text-muted-foreground">{hasDiscount ? 'Total' : 'Subtotal'}</span>
+                  <span className="text-lg font-display flex items-center gap-2">
+                    {formatPrice(total.amount, total.currencyCode)}
+                    {isSyncing && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground pt-2">
                   Shipping calculated at checkout
                 </p>
                 

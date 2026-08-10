@@ -5,6 +5,8 @@ import { Footer } from "@/components/Footer";
 import { ShopifyProduct, fetchProductByHandle, formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
 import { SEO } from "@/components/SEO";
+import { ReviewsWidget } from "@/components/ReviewsWidget";
+import { fetchProductReviews, JudgemeProductReviews } from "@/lib/judgeme";
 import { Loader2, Minus, Plus, ChevronLeft, Truck, Shield, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -68,7 +70,7 @@ const formatDescription = (text: string) => {
     if (header && content) {
       const lines = content
         .trim()
-        .split(/[\n–-]/) // Split by newlines and dashes
+        .split(/\n|\s+–\s+/) // Split by newlines and space-bounded en-dash bullet separators (not dashes inside words or number ranges like "4–7")
         .map((line: string) => line.trim())
         .filter((line: string) => line.length > 0);
       
@@ -95,6 +97,7 @@ const ProductDetail = () => {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [reviewSummary, setReviewSummary] = useState<JudgemeProductReviews | null>(null);
 
   const addItem = useCartStore((state) => state.addItem);
   const setCartOpen = useCartStore((state) => state.setOpen);
@@ -130,6 +133,15 @@ const ProductDetail = () => {
 
     loadProduct();
   }, [handle]);
+
+  useEffect(() => {
+    if (!product) return;
+    const externalId = product.id.split('/').pop();
+    if (!externalId) return;
+
+    setReviewSummary(null);
+    fetchProductReviews(externalId).then(setReviewSummary);
+  }, [product]);
 
   const handleOptionChange = (optionName: string, value: string) => {
     const newOptions = { ...selectedOptions, [optionName]: value };
@@ -222,21 +234,41 @@ const ProductDetail = () => {
         canonical={`/product/${product.handle}`}
         type="product"
         image={product.images.edges[0]?.node.url}
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: product.title,
-          description: product.description,
-          image: product.images.edges[0]?.node.url,
-          offers: {
-            "@type": "Offer",
-            price: product.priceRange.minVariantPrice.amount,
-            priceCurrency: product.priceRange.minVariantPrice.currencyCode,
-            availability: currentVariant?.availableForSale
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.title,
+            description: product.description,
+            image: product.images.edges[0]?.node.url,
+            offers: {
+              "@type": "Offer",
+              price: product.priceRange.minVariantPrice.amount,
+              priceCurrency: product.priceRange.minVariantPrice.currencyCode,
+              availability: currentVariant?.availableForSale
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+            },
+            ...(reviewSummary && reviewSummary.reviewCount > 0
+              ? {
+                  aggregateRating: {
+                    "@type": "AggregateRating",
+                    ratingValue: reviewSummary.averageRating,
+                    reviewCount: reviewSummary.reviewCount,
+                  },
+                }
+              : {}),
           },
-        }}
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://iradahclothing.com/" },
+              { "@type": "ListItem", position: 2, name: "All Products", item: "https://iradahclothing.com/products" },
+              { "@type": "ListItem", position: 3, name: product.title, item: `https://iradahclothing.com/product/${product.handle}` },
+            ],
+          },
+        ]}
       />
       <Navbar />
       <main className="pt-16 md:pt-20">
@@ -285,6 +317,8 @@ const ProductDetail = () => {
                   ))}
                 </div>
               )}
+
+              <ReviewsWidget externalId={product.id.split('/').pop() || ''} />
             </div>
 
             {/* Product Info */}
@@ -394,7 +428,7 @@ const ProductDetail = () => {
                               <img
                                 key={idx}
                                 src={imageSrc}
-                                alt="Product size chart"
+                                alt={`${product.title} size chart`}
                                 className="w-full border border-border rounded"
                               />
                             ))}

@@ -60,6 +60,25 @@ const Products = () => {
         title="All Products"
         description="Browse the full IRADAH collection — curated fashion for every wardrobe."
         canonical="/products"
+        jsonLd={
+          products.length > 0
+            ? {
+                "@context": "https://schema.org",
+                "@type": "CollectionPage",
+                name: "All Products",
+                url: "https://iradahclothing.com/products",
+                mainEntity: {
+                  "@type": "ItemList",
+                  itemListElement: products.map((product, index) => ({
+                    "@type": "ListItem",
+                    position: index + 1,
+                    url: `https://iradahclothing.com/product/${product.node.handle}`,
+                    name: product.node.title,
+                  })),
+                },
+              }
+            : undefined
+        }
       />
       <Navbar />
       

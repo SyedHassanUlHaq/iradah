@@ -39,7 +39,7 @@ export const CollectionGrid = () => {
                   <img
                     src={collection.image.url}
                     alt={collection.image.altText || `Shop ${collection.title}`}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
                 ) : (

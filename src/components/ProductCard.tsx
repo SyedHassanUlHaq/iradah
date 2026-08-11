@@ -57,14 +57,14 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               <img
                 src={firstImage.url}
                 alt={firstImage.altText || node.title}
-                className={`product-image w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${isHovered && secondImage ? 'opacity-0' : 'opacity-100'}`}
+                className={`product-image w-full h-full object-cover object-center absolute inset-0 transition-opacity duration-500 ${isHovered && secondImage ? 'opacity-0' : 'opacity-100'}`}
                 loading="lazy"
               />
               {secondImage && (
                 <img
                   src={secondImage.url}
                   alt={secondImage.altText || `${node.title} alternate`}
-                  className={`product-image w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                  className={`product-image w-full h-full object-cover object-center absolute inset-0 transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                   loading="lazy"
                 />
               )}

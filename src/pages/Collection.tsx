@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -46,11 +46,39 @@ const collectionHandleMap: Record<string, string> = {
   trousers: "trousers",
 };
 
+function splitDescription(text: string): string[] {
+  const normalized = text.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return [];
+
+  const byBreak = normalized
+    .split(/\n\s*\n/)
+    .map((p) => p.replace(/\n/g, " ").trim())
+    .filter(Boolean);
+  if (byBreak.length > 1) return byBreak;
+
+  const sentences =
+    normalized.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g)?.map((s) => s.trim()).filter(Boolean) ??
+    [normalized];
+
+  const paragraphs: string[] = [];
+  for (let i = 0; i < sentences.length; i += 2) {
+    paragraphs.push(sentences.slice(i, i + 2).join(" "));
+  }
+  return paragraphs;
+}
+
+function getTeaser(text: string, maxLen = 160): string {
+  const firstSentence = text.split(/(?<=[.!?])\s+/)[0]?.trim() || text.trim();
+  if (firstSentence.length <= maxLen) return firstSentence;
+  return `${firstSentence.slice(0, maxLen - 1).trimEnd()}…`;
+}
+
 const Collection = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [collectionTitle, setCollectionTitle] = useState<string | null>(null);
   const [collectionDescription, setCollectionDescription] = useState<string | null>(null);
+  const [collectionImage, setCollectionImage] = useState<{ url: string; altText: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -77,7 +105,12 @@ const Collection = () => {
         setProducts(collection.products.edges);
         setCollectionTitle(collection.title);
         setCollectionDescription(
-          collection.description || info?.description || `Browse the ${collection.title} collection.`
+          collection.description || info?.description || `Browse the ${collection.title} collection.`,
+        );
+        setCollectionImage(
+          collection.image ??
+            collection.products.edges[0]?.node.images.edges[0]?.node ??
+            null,
         );
       } catch (error) {
         console.error("Failed to load collection:", error);
@@ -88,7 +121,18 @@ const Collection = () => {
     };
 
     loadProducts();
-  }, [category, info]);
+  }, [category, info, resolvedHandle]);
+
+  const descriptionParagraphs = useMemo(
+    () => (collectionDescription ? splitDescription(collectionDescription) : []),
+    [collectionDescription],
+  );
+  const teaser = useMemo(
+    () => (collectionDescription ? getTeaser(collectionDescription) : info?.description ?? "Browse this collection."),
+    [collectionDescription, info?.description],
+  );
+  const showStory = descriptionParagraphs.length > 1 || (collectionDescription?.length ?? 0) > 220;
+  const title = collectionTitle ?? info?.title ?? "Collection";
 
   if (notFound) {
     return (
@@ -106,16 +150,19 @@ const Collection = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={collectionTitle ?? info?.title ?? "Collection"}
-        description={collectionDescription ?? info?.description ?? "Browse this collection."}
+        title={title}
+        description={teaser}
         canonical={`/collection/${category}`}
+        image={collectionImage?.url}
         jsonLd={
           products.length > 0
             ? {
                 "@context": "https://schema.org",
                 "@type": "CollectionPage",
-                name: collectionTitle ?? info?.title ?? "Collection",
+                name: title,
+                description: teaser,
                 url: `https://iradahclothing.com/collection/${category}`,
+                image: collectionImage?.url,
                 mainEntity: {
                   "@type": "ItemList",
                   itemListElement: products.map((product, index) => ({
@@ -130,29 +177,59 @@ const Collection = () => {
         }
       />
       <Navbar />
-      
+
       <main className="pt-16 md:pt-20">
-        {/* Hero Banner */}
-        <div className="bg-secondary/30 py-16 md:py-24 text-center">
-          <div className="container mx-auto px-4">
-            <span className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Collection</span>
-            <h1 className="font-display text-5xl md:text-7xl mt-2">
-              {collectionTitle ?? info?.title ?? "Collection"}
-            </h1>
-            <p className="text-muted-foreground mt-4 max-w-md mx-auto text-sm">
-              {collectionDescription ?? info?.description ?? "Browse this collection."}
-            </p>
+        <header className="relative overflow-hidden bg-secondary/40">
+          {collectionImage && (
+            <img
+              src={collectionImage.url}
+              alt={collectionImage.altText || title}
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              loading="eager"
+            />
+          )}
+          <div
+            className={
+              collectionImage
+                ? "absolute inset-0 bg-gradient-to-t from-foreground via-foreground/55 to-foreground/25"
+                : "absolute inset-0"
+            }
+          />
+          <div
+            className={`relative container mx-auto px-4 ${
+              collectionImage ? "py-20 md:py-28 text-background" : "py-14 md:py-20"
+            }`}
+          >
+            <div className="max-w-3xl">
+              <span
+                className={`text-[10px] md:text-xs uppercase tracking-[0.2em] ${
+                  collectionImage ? "text-background/70" : "text-muted-foreground"
+                }`}
+              >
+                Collection
+              </span>
+              <h1 className="font-display text-4xl md:text-6xl mt-3 leading-[1.05]">{title}</h1>
+              <p
+                className={`mt-4 max-w-xl text-sm md:text-base leading-relaxed ${
+                  collectionImage ? "text-background/75" : "text-muted-foreground"
+                }`}
+              >
+                {teaser}
+              </p>
+              {!loading && (
+                <p
+                  className={`mt-6 text-[10px] uppercase tracking-[0.2em] ${
+                    collectionImage ? "text-background/55" : "text-muted-foreground"
+                  }`}
+                >
+                  {products.length} {products.length === 1 ? "Piece" : "Pieces"}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        </header>
 
-        {/* Products Grid */}
-        <div className="container mx-auto px-4 py-12">
-          <div className="flex items-center justify-between mb-8">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">
-              {products.length} Products
-            </p>
-          </div>
-
+        <section className="container mx-auto px-4 py-12 md:py-16">
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -168,7 +245,27 @@ const Collection = () => {
               ))}
             </div>
           )}
-        </div>
+        </section>
+
+        {showStory && !loading && (
+          <section className="border-t border-border bg-secondary/20">
+            <div className="container mx-auto px-4 py-14 md:py-20">
+              <div className="max-w-2xl">
+                <span className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-[0.2em]">
+                  About the collection
+                </span>
+                <h2 className="font-display text-2xl md:text-4xl mt-2">The story</h2>
+                <div className="mt-6 space-y-4">
+                  {descriptionParagraphs.map((paragraph, index) => (
+                    <p key={index} className="text-sm md:text-[15px] leading-relaxed text-muted-foreground">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

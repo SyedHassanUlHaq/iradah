@@ -180,53 +180,57 @@ const Collection = () => {
 
       <main className="pt-16 md:pt-20">
         <header className="relative overflow-hidden bg-secondary/40">
-          {collectionImage && (
-            <img
-              src={collectionImage.url}
-              alt={collectionImage.altText || title}
-              className="absolute inset-0 h-full w-full object-cover object-center"
-              loading="eager"
-            />
-          )}
-          <div
-            className={
-              collectionImage
-                ? "absolute inset-0 bg-gradient-to-t from-foreground via-foreground/55 to-foreground/25"
-                : "absolute inset-0"
-            }
-          />
-          <div
-            className={`relative container mx-auto px-4 ${
-              collectionImage ? "py-20 md:py-28 text-background" : "py-14 md:py-20"
-            }`}
-          >
-            <div className="max-w-3xl">
-              <span
-                className={`text-[10px] md:text-xs uppercase tracking-[0.2em] ${
-                  collectionImage ? "text-background/70" : "text-muted-foreground"
-                }`}
-              >
-                Collection
-              </span>
-              <h1 className="font-display text-4xl md:text-6xl mt-3 leading-[1.05]">{title}</h1>
-              <p
-                className={`mt-4 max-w-xl text-sm md:text-base leading-relaxed ${
-                  collectionImage ? "text-background/75" : "text-muted-foreground"
-                }`}
-              >
-                {teaser}
-              </p>
-              {!loading && (
-                <p
-                  className={`mt-6 text-[10px] uppercase tracking-[0.2em] ${
-                    collectionImage ? "text-background/55" : "text-muted-foreground"
-                  }`}
-                >
-                  {products.length} {products.length === 1 ? "Piece" : "Pieces"}
+          {collectionImage ? (
+            <>
+              <img
+                src={collectionImage.url}
+                alt={collectionImage.altText || title}
+                className="block w-full h-auto -translate-y-[30%]"
+                loading="eager"
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  // Keep middle 40%: cut top 30% + bottom 30%
+                  img.style.marginBottom = `${-img.offsetHeight * 0.6}px`;
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/50 to-foreground/20" />
+              <div className="absolute inset-0 flex items-end">
+                <div className="container mx-auto px-4 py-10 md:py-14 text-background">
+                  <div className="max-w-3xl">
+                    <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-background/70">
+                      Collection
+                    </span>
+                    <h1 className="font-display text-4xl md:text-6xl mt-3 leading-[1.05]">{title}</h1>
+                    <p className="mt-4 max-w-xl text-sm md:text-base leading-relaxed text-background/75">
+                      {teaser}
+                    </p>
+                    {!loading && (
+                      <p className="mt-6 text-[10px] uppercase tracking-[0.2em] text-background/55">
+                        {products.length} {products.length === 1 ? "Piece" : "Pieces"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="relative container mx-auto px-4 py-14 md:py-20">
+              <div className="max-w-3xl">
+                <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Collection
+                </span>
+                <h1 className="font-display text-4xl md:text-6xl mt-3 leading-[1.05]">{title}</h1>
+                <p className="mt-4 max-w-xl text-sm md:text-base leading-relaxed text-muted-foreground">
+                  {teaser}
                 </p>
-              )}
+                {!loading && (
+                  <p className="mt-6 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    {products.length} {products.length === 1 ? "Piece" : "Pieces"}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </header>
 
         <section className="container mx-auto px-4 py-12 md:py-16">

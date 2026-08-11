@@ -10,8 +10,12 @@ const Index = lazy(() => import("./pages/Index"));
 const Products = lazy(() => import("./pages/Products"));
 const Collection = lazy(() => import("./pages/Collection"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const Policy = lazy(() => import("./pages/Policy"));
 const SizeGuide = lazy(() => import("./pages/SizeGuide"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Returns = lazy(() => import("./pages/Returns"));
+const Shipping = lazy(() => import("./pages/Shipping"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const ProductRedirect = () => {
@@ -41,12 +45,12 @@ const App = () => (
             <Route path="/products/:slug" element={<ProductRedirect />} />
             <Route path="/collection/:category" element={<Collection />} />
             <Route path="/product/:handle" element={<ProductDetail />} />
-            <Route path="/shipping" element={<Policy />} />
-            <Route path="/returns" element={<Policy />} />
+            <Route path="/shipping" element={<Shipping />} />
+            <Route path="/returns" element={<Returns />} />
             <Route path="/size-guide" element={<SizeGuide />} />
-            <Route path="/contact" element={<Policy />} />
-            <Route path="/privacy" element={<Policy />} />
-            <Route path="/terms" element={<Policy />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

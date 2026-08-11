@@ -430,6 +430,9 @@ const ProductDetail = () => {
                                 src={imageSrc}
                                 alt={`${product.title} size chart`}
                                 className="w-full border border-border rounded"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
                               />
                             ))}
                           </div>

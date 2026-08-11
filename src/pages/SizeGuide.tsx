@@ -30,7 +30,7 @@ const sizeCharts = [
     navLabel: "Flat Hem",
     description: "Applies to Essential Flat Hem Trouser and Virsa Heritage Patchwork Trouser.",
     image:
-      "https://cdn.shopify.com/s/files/1/0747/6130/6212/files/Flat_Hem_Trouser_Size_Chart_d7e89844-d9da-458b-881b-5223dfe27f96.png?v=1774692164",
+      "https://cdn.shopify.com/s/files/1/0747/6130/6212/files/flat_hem_trouser.png?v=1786451513",
   },
   {
     id: "jogger-pant",
@@ -39,7 +39,7 @@ const sizeCharts = [
     navLabel: "Joggers",
     description: "Applies to Essential Jogger Pant.",
     image:
-      "https://cdn.shopify.com/s/files/1/0747/6130/6212/files/Jogger_Size_Chart_50bb37d8-2e94-495d-a123-838c88da792c.png?v=1774693642",
+      "https://cdn.shopify.com/s/files/1/0747/6130/6212/files/jogger.png?v=1786451534",
   },
 ];
 

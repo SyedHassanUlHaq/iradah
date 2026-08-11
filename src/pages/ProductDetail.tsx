@@ -112,17 +112,9 @@ const ProductDetail = () => {
         setProduct(data);
         
         if (data?.variants.edges.length) {
-          const firstAvailableVariant = data.variants.edges.find(
-            (v) => v.node.availableForSale
-          )?.node;
-          const firstVariant = firstAvailableVariant || data.variants.edges[0].node;
-          setSelectedVariant(firstVariant.id);
-          
-          const options: Record<string, string> = {};
-          firstVariant.selectedOptions.forEach(opt => {
-            options[opt.name] = opt.value;
-          });
-          setSelectedOptions(options);
+          // Don't auto-select a size/color — shopper must choose.
+          setSelectedVariant(null);
+          setSelectedOptions({});
         }
       } catch (error) {
         console.error("Failed to load product:", error);
@@ -153,16 +145,14 @@ const ProductDetail = () => {
       );
     });
 
-    if (matchingVariant) {
-      setSelectedVariant(matchingVariant.node.id);
-    }
+    setSelectedVariant(matchingVariant?.node.id ?? null);
   };
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
 
     const variant = product.variants.edges.find(v => v.node.id === selectedVariant)?.node;
-    if (!variant) return;
+    if (!variant?.availableForSale) return;
 
     addItem({
       product: { node: product },
@@ -182,6 +172,10 @@ const ProductDetail = () => {
   };
 
   const currentVariant = product?.variants.edges.find(v => v.node.id === selectedVariant)?.node;
+  const allOptionsSelected =
+    !!product &&
+    (product.options.length === 0 ||
+      product.options.every((option) => selectedOptions[option.name]));
 
   const isOptionValueAvailable = (optionName: string, value: string) => {
     return product?.variants.edges.some(({ node: variant }) => {
@@ -192,6 +186,7 @@ const ProductDetail = () => {
 
       const matchesOtherSelections = variant.selectedOptions.every((opt) => {
         if (opt.name === optionName) return true;
+        if (!selectedOptions[opt.name]) return true;
         return selectedOptions[opt.name] === opt.value;
       });
 
@@ -327,7 +322,12 @@ const ProductDetail = () => {
                 <span className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Iradah</span>
                 <h1 className="font-display text-3xl md:text-4xl mt-1">{product.title}</h1>
                 <p className="text-xl mt-3">
-                  {currentVariant && formatPrice(currentVariant.price.amount, currentVariant.price.currencyCode)}
+                  {currentVariant
+                    ? formatPrice(currentVariant.price.amount, currentVariant.price.currencyCode)
+                    : formatPrice(
+                        product.priceRange.minVariantPrice.amount,
+                        product.priceRange.minVariantPrice.currencyCode,
+                      )}
                 </p>
               </div>
 
@@ -336,7 +336,8 @@ const ProductDetail = () => {
                 {product.options.map((option) => (
                   <div key={option.name}>
                     <label className="text-xs font-medium uppercase tracking-wider mb-3 block">
-                      {option.name}: {selectedOptions[option.name]}
+                      {option.name}
+                      {selectedOptions[option.name] ? `: ${selectedOptions[option.name]}` : ""}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {option.values.map((value) => {
@@ -344,17 +345,15 @@ const ProductDetail = () => {
                         return (
                           <button
                             key={value}
-                            onClick={() => available && handleOptionChange(option.name, value)}
-                            disabled={!available}
-                            aria-disabled={!available}
-                            title={available ? undefined : `${value} - Sold Out`}
+                            onClick={() => handleOptionChange(option.name, value)}
+                            title={available ? undefined : `${value} — Sold out`}
                             className={`px-5 py-2.5 border text-sm transition-colors ${
                               selectedOptions[option.name] === value
                                 ? 'border-foreground bg-foreground text-background'
                                 : 'border-border hover:border-foreground'
                             } ${
                               !available
-                                ? 'opacity-40 cursor-not-allowed line-through decoration-1 hover:border-border'
+                                ? 'opacity-45 line-through decoration-1'
                                 : ''
                             }`}
                           >
@@ -392,10 +391,14 @@ const ProductDetail = () => {
               {/* Add to Cart */}
               <button
                 onClick={handleAddToCart}
-                disabled={!currentVariant?.availableForSale}
+                disabled={!allOptionsSelected || !currentVariant?.availableForSale}
                 className="w-full btn-primary h-14 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {currentVariant?.availableForSale ? 'Add to Bag' : 'Sold Out'}
+                {!allOptionsSelected
+                  ? "Select options"
+                  : currentVariant?.availableForSale
+                    ? "Add to Bag"
+                    : "Sold Out"}
               </button>
 
               {/* Features */}

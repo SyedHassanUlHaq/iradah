@@ -198,6 +198,24 @@
     animation: marquee 40s linear infinite;
   }
 
+  .marquee-fast {
+    animation: marquee 24s linear infinite;
+  }
+
+  .stamp-pulse {
+    animation: stampPulse 2.6s ease-in-out infinite;
+  }
+
+  @keyframes stampPulse {
+    0%,
+    100% {
+      transform: rotate(-9deg) scale(1);
+    }
+    50% {
+      transform: rotate(-9deg) scale(1.06);
+    }
+  }
+
   @keyframes marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }

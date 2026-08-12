@@ -52,7 +52,7 @@ const SizeGuide = () => {
         canonical="/size-guide"
       />
       <Navbar />
-      <main className="pt-16 md:pt-20">
+      <main className="pt-[110px] md:pt-[132px]">
         <header className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-secondary/80 via-background to-accent/40" />
           <div className="relative container mx-auto px-4 py-14 md:py-20">

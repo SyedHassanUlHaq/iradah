@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import heroImage from "@/assets/hero-image.webp";
+import { AzaadiStamp } from "@/components/AzaadiStamp";
 
 export const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -58,9 +59,18 @@ export const Hero = () => {
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
       </div>
 
+      <AzaadiStamp
+        className="absolute top-[118px] right-3 z-10 text-[#0f3d24] opacity-0 animate-fade-in md:hidden"
+        size={112}
+      />
+      <AzaadiStamp
+        className="hidden md:block absolute top-[158px] right-8 z-10 text-[#0f3d24] opacity-0 animate-fade-in"
+        size={156}
+      />
+
       {/* Content locked to the left column on desktop (same width as white panel) */}
       <div
-        className="relative z-10 w-full md:w-[42%] px-5 md:px-8 lg:px-10 xl:px-12 pb-20 md:pb-0 pt-24 transition-opacity duration-100 will-change-[opacity,transform]"
+        className="relative z-10 w-full md:w-[42%] px-5 md:px-8 lg:px-10 xl:px-12 pb-20 md:pb-0 pt-[142px] md:pt-[148px] transition-opacity duration-100 will-change-[opacity,transform]"
         style={{
           opacity: Math.max(1 - scrollY / 500, 0),
           transform: `translateY(${scrollY * 0.05}px)`,

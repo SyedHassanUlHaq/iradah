@@ -301,7 +301,7 @@ const ProductDetail = () => {
         ]}
       />
       <Navbar />
-      <main className="pt-16 md:pt-20">
+      <main className="pt-[110px] md:pt-[132px]">
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
           <Link to="/products" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">

@@ -70,7 +70,7 @@ function splitDescription(text: string): string[] {
 function getTeaser(text: string, maxLen = 160): string {
   const firstSentence = text.split(/(?<=[.!?])\s+/)[0]?.trim() || text.trim();
   if (firstSentence.length <= maxLen) return firstSentence;
-  return `${firstSentence.slice(0, maxLen - 1).trimEnd()}…`;
+  return `${firstSentence.slice(0, maxLen - 1).trimEnd()}GǪ`;
 }
 
 const Collection = () => {
@@ -200,7 +200,7 @@ const Collection = () => {
       />
       <Navbar />
 
-      <main className="pt-16 md:pt-20">
+      <main className="pt-[110px] md:pt-[132px]">
         <header className="relative overflow-hidden bg-secondary/40">
           {collectionImage ? (
             <div className="relative overflow-hidden">

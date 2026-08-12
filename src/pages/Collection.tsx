@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -81,6 +81,7 @@ const Collection = () => {
   const [collectionImage, setCollectionImage] = useState<{ url: string; altText: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const heroImageRef = useRef<HTMLImageElement>(null);
 
   const info = category ? collectionInfo[category] : null;
   const resolvedHandle = category ? collectionHandleMap[category.toLowerCase()] ?? category : null;
@@ -122,6 +123,27 @@ const Collection = () => {
 
     loadProducts();
   }, [category, info, resolvedHandle]);
+
+  useEffect(() => {
+    const img = heroImageRef.current;
+    if (!img) return;
+
+    const applyCrop = () => {
+      // Mobile keeps more of the image; desktop cuts top/bottom 30%.
+      const cut = window.matchMedia("(max-width: 767px)").matches ? 0.15 : 0.3;
+      img.style.transform = `translateY(-${cut * 100}%)`;
+      img.style.marginBottom = `${-img.offsetHeight * cut * 2}px`;
+    };
+
+    const onLoad = () => applyCrop();
+    if (img.complete) applyCrop();
+    img.addEventListener("load", onLoad);
+    window.addEventListener("resize", applyCrop);
+    return () => {
+      img.removeEventListener("load", onLoad);
+      window.removeEventListener("resize", applyCrop);
+    };
+  }, [collectionImage?.url]);
 
   const descriptionParagraphs = useMemo(
     () => (collectionDescription ? splitDescription(collectionDescription) : []),
@@ -181,45 +203,45 @@ const Collection = () => {
       <main className="pt-16 md:pt-20">
         <header className="relative overflow-hidden bg-secondary/40">
           {collectionImage ? (
-            <>
+            <div className="relative overflow-hidden">
               <img
+                ref={heroImageRef}
                 src={collectionImage.url}
                 alt={collectionImage.altText || title}
-                className="block w-full h-auto -translate-y-[30%]"
+                className="block w-full h-auto"
                 loading="eager"
-                onLoad={(e) => {
-                  const img = e.currentTarget;
-                  // Keep middle 40%: cut top 30% + bottom 30%
-                  img.style.marginBottom = `${-img.offsetHeight * 0.6}px`;
-                }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/50 to-foreground/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/55 to-foreground/25" />
               <div className="absolute inset-0 flex items-end">
-                <div className="container mx-auto px-4 py-10 md:py-14 text-background">
+                <div className="container mx-auto px-4 py-7 sm:py-9 md:py-12 lg:py-14 text-background">
                   <div className="max-w-3xl">
-                    <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-background/70">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-background/70">
                       Collection
                     </span>
-                    <h1 className="font-display text-4xl md:text-6xl mt-3 leading-[1.05]">{title}</h1>
-                    <p className="mt-4 max-w-xl text-sm md:text-base leading-relaxed text-background/75">
+                    <h1 className="font-display mt-2 sm:mt-3 leading-[1.12] break-words text-[clamp(1.75rem,6vw,3.75rem)]">
+                      {title}
+                    </h1>
+                    <p className="mt-3 sm:mt-4 max-w-xl leading-relaxed text-background/75 text-[clamp(0.8125rem,2.4vw,1rem)] line-clamp-3 md:line-clamp-none">
                       {teaser}
                     </p>
                     {!loading && (
-                      <p className="mt-6 text-[10px] uppercase tracking-[0.2em] text-background/55">
+                      <p className="mt-4 sm:mt-5 md:mt-6 text-[10px] uppercase tracking-[0.2em] text-background/55">
                         {products.length} {products.length === 1 ? "Piece" : "Pieces"}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           ) : (
             <div className="relative container mx-auto px-4 py-14 md:py-20">
               <div className="max-w-3xl">
                 <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   Collection
                 </span>
-                <h1 className="font-display text-4xl md:text-6xl mt-3 leading-[1.05]">{title}</h1>
+                <h1 className="font-display text-2xl sm:text-4xl md:text-6xl mt-3 leading-[1.15] break-words">
+                  {title}
+                </h1>
                 <p className="mt-4 max-w-xl text-sm md:text-base leading-relaxed text-muted-foreground">
                   {teaser}
                 </p>

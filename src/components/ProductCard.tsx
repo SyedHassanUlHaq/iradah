@@ -72,14 +72,17 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const handleAddToCart = () => {
     if (!selectedVariant?.availableForSale) return;
 
-    addItem({
+    const added = addItem({
       product,
       variantId: selectedVariant.id,
       variantTitle: selectedVariant.title,
       price: selectedVariant.price,
       quantity: 1,
+      quantityAvailable: selectedVariant.quantityAvailable,
       selectedOptions: selectedVariant.selectedOptions,
     });
+
+    if (!added) return;
 
     toast.success("Added to bag", {
       description: node.title,

@@ -101,6 +101,7 @@ const ProductDetail = () => {
 
   const addItem = useCartStore((state) => state.addItem);
   const setCartOpen = useCartStore((state) => state.setOpen);
+  const getVariantQuantityInCart = useCartStore((state) => state.getVariantQuantityInCart);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -148,23 +149,49 @@ const ProductDetail = () => {
     setSelectedVariant(matchingVariant?.node.id ?? null);
   };
 
+  // Keep quantity within stock when the selected variant changes.
+  useEffect(() => {
+    if (!product || !selectedVariant) return;
+    const variant = product.variants.edges.find((v) => v.node.id === selectedVariant)?.node;
+    const max = variant?.quantityAvailable;
+    if (max != null && quantity > max) {
+      setQuantity(Math.max(1, max));
+    }
+  }, [product, selectedVariant, quantity]);
+
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
 
     const variant = product.variants.edges.find(v => v.node.id === selectedVariant)?.node;
     if (!variant?.availableForSale) return;
 
-    addItem({
+    const max = variant.quantityAvailable;
+    const inCart = getVariantQuantityInCart(variant.id);
+    const remaining = max == null ? null : Math.max(0, max - inCart);
+    const qtyToAdd = remaining == null ? quantity : Math.min(quantity, remaining);
+
+    if (remaining === 0) {
+      toast.error("Only a few left", {
+        description: `Only ${max} available for this size/color.`,
+        position: "top-center",
+      });
+      return;
+    }
+
+    const added = addItem({
       product: { node: product },
       variantId: variant.id,
       variantTitle: variant.title,
       price: variant.price,
-      quantity,
+      quantity: qtyToAdd,
+      quantityAvailable: variant.quantityAvailable,
       selectedOptions: variant.selectedOptions,
     });
 
+    if (!added) return;
+
     toast.success("Added to bag", {
-      description: `${product.title} × ${quantity}`,
+      description: `${product.title} × ${qtyToAdd}`,
       position: "top-center",
     });
     
@@ -172,6 +199,14 @@ const ProductDetail = () => {
   };
 
   const currentVariant = product?.variants.edges.find(v => v.node.id === selectedVariant)?.node;
+  const stockLeft =
+    currentVariant?.quantityAvailable == null
+      ? null
+      : Math.max(0, currentVariant.quantityAvailable - getVariantQuantityInCart(currentVariant.id));
+  const maxSelectable =
+    currentVariant?.quantityAvailable == null
+      ? null
+      : Math.max(1, currentVariant.quantityAvailable);
   const allOptionsSelected =
     !!product &&
     (product.options.length === 0 ||
@@ -370,6 +405,11 @@ const ProductDetail = () => {
               <div>
                 <label className="text-xs font-medium uppercase tracking-wider mb-3 block">
                   Quantity
+                  {currentVariant?.quantityAvailable != null && currentVariant.quantityAvailable > 0 && (
+                    <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground">
+                      ({currentVariant.quantityAvailable} left)
+                    </span>
+                  )}
                 </label>
                 <div className="flex items-center border border-border w-fit">
                   <button
@@ -380,8 +420,13 @@ const ProductDetail = () => {
                   </button>
                   <span className="w-14 text-center">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-secondary transition-colors"
+                    onClick={() =>
+                      setQuantity((q) =>
+                        maxSelectable == null ? q + 1 : Math.min(maxSelectable, q + 1),
+                      )
+                    }
+                    disabled={maxSelectable != null && quantity >= maxSelectable}
+                    className="w-12 h-12 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -391,14 +436,20 @@ const ProductDetail = () => {
               {/* Add to Cart */}
               <button
                 onClick={handleAddToCart}
-                disabled={!allOptionsSelected || !currentVariant?.availableForSale}
+                disabled={
+                  !allOptionsSelected ||
+                  !currentVariant?.availableForSale ||
+                  stockLeft === 0
+                }
                 className="w-full btn-primary h-14 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {!allOptionsSelected
                   ? "Select options"
-                  : currentVariant?.availableForSale
-                    ? "Add to Bag"
-                    : "Sold Out"}
+                  : stockLeft === 0
+                    ? "Max in bag"
+                    : currentVariant?.availableForSale
+                      ? "Add to Bag"
+                      : "Sold Out"}
               </button>
 
               {/* Features */}

@@ -83,7 +83,11 @@ export const CartDrawer = () => {
                           </button>
                           <span className="w-8 text-center text-sm">{item.quantity}</span>
                           <button
-                            className="w-8 h-8 flex items-center justify-center hover:bg-secondary transition-colors"
+                            className="w-8 h-8 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            disabled={
+                              item.quantityAvailable != null &&
+                              item.quantity >= item.quantityAvailable
+                            }
                             onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                           >
                             <Plus className="h-3 w-3" />
@@ -97,6 +101,13 @@ export const CartDrawer = () => {
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
+                      {item.quantityAvailable != null &&
+                        item.quantityAvailable > 0 &&
+                        item.quantity >= item.quantityAvailable && (
+                          <p className="text-[10px] text-muted-foreground mt-2">
+                            Only {item.quantityAvailable} left
+                          </p>
+                        )}
                     </div>
                   </div>
                 ))}

@@ -48,10 +48,15 @@ async function main() {
 
   console.log(`Prerendering ${routes.length} routes...`);
 
-  const preview = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
-    cwd: ROOT_DIR,
-    stdio: 'ignore',
-  });
+  const preview = spawn(
+    process.platform === 'win32' ? 'npx.cmd' : 'npx',
+    ['vite', 'preview', '--port', String(PORT), '--strictPort'],
+    {
+      cwd: ROOT_DIR,
+      stdio: 'ignore',
+      shell: process.platform === 'win32',
+    },
+  );
 
   let browser;
   try {

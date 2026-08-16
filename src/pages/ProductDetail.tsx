@@ -101,6 +101,7 @@ const ProductDetail = () => {
 
   const addItem = useCartStore((state) => state.addItem);
   const setCartOpen = useCartStore((state) => state.setOpen);
+  const getVariantQuantityInCart = useCartStore((state) => state.getVariantQuantityInCart);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -112,17 +113,9 @@ const ProductDetail = () => {
         setProduct(data);
         
         if (data?.variants.edges.length) {
-          const firstAvailableVariant = data.variants.edges.find(
-            (v) => v.node.availableForSale
-          )?.node;
-          const firstVariant = firstAvailableVariant || data.variants.edges[0].node;
-          setSelectedVariant(firstVariant.id);
-          
-          const options: Record<string, string> = {};
-          firstVariant.selectedOptions.forEach(opt => {
-            options[opt.name] = opt.value;
-          });
-          setSelectedOptions(options);
+          // Don't auto-select a size/color — shopper must choose.
+          setSelectedVariant(null);
+          setSelectedOptions({});
         }
       } catch (error) {
         console.error("Failed to load product:", error);
@@ -153,28 +146,52 @@ const ProductDetail = () => {
       );
     });
 
-    if (matchingVariant) {
-      setSelectedVariant(matchingVariant.node.id);
-    }
+    setSelectedVariant(matchingVariant?.node.id ?? null);
   };
+
+  // Keep quantity within stock when the selected variant changes.
+  useEffect(() => {
+    if (!product || !selectedVariant) return;
+    const variant = product.variants.edges.find((v) => v.node.id === selectedVariant)?.node;
+    const max = variant?.quantityAvailable;
+    if (max != null && quantity > max) {
+      setQuantity(Math.max(1, max));
+    }
+  }, [product, selectedVariant, quantity]);
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
 
     const variant = product.variants.edges.find(v => v.node.id === selectedVariant)?.node;
-    if (!variant) return;
+    if (!variant?.availableForSale) return;
 
-    addItem({
+    const max = variant.quantityAvailable;
+    const inCart = getVariantQuantityInCart(variant.id);
+    const remaining = max == null ? null : Math.max(0, max - inCart);
+    const qtyToAdd = remaining == null ? quantity : Math.min(quantity, remaining);
+
+    if (remaining === 0) {
+      toast.error("Only a few left", {
+        description: `Only ${max} available for this size/color.`,
+        position: "top-center",
+      });
+      return;
+    }
+
+    const added = addItem({
       product: { node: product },
       variantId: variant.id,
       variantTitle: variant.title,
       price: variant.price,
-      quantity,
+      quantity: qtyToAdd,
+      quantityAvailable: variant.quantityAvailable,
       selectedOptions: variant.selectedOptions,
     });
 
+    if (!added) return;
+
     toast.success("Added to bag", {
-      description: `${product.title} × ${quantity}`,
+      description: `${product.title} × ${qtyToAdd}`,
       position: "top-center",
     });
     
@@ -182,6 +199,18 @@ const ProductDetail = () => {
   };
 
   const currentVariant = product?.variants.edges.find(v => v.node.id === selectedVariant)?.node;
+  const stockLeft =
+    currentVariant?.quantityAvailable == null
+      ? null
+      : Math.max(0, currentVariant.quantityAvailable - getVariantQuantityInCart(currentVariant.id));
+  const maxSelectable =
+    currentVariant?.quantityAvailable == null
+      ? null
+      : Math.max(1, currentVariant.quantityAvailable);
+  const allOptionsSelected =
+    !!product &&
+    (product.options.length === 0 ||
+      product.options.every((option) => selectedOptions[option.name]));
 
   const isOptionValueAvailable = (optionName: string, value: string) => {
     return product?.variants.edges.some(({ node: variant }) => {
@@ -192,6 +221,7 @@ const ProductDetail = () => {
 
       const matchesOtherSelections = variant.selectedOptions.every((opt) => {
         if (opt.name === optionName) return true;
+        if (!selectedOptions[opt.name]) return true;
         return selectedOptions[opt.name] === opt.value;
       });
 
@@ -271,7 +301,7 @@ const ProductDetail = () => {
         ]}
       />
       <Navbar />
-      <main className="pt-16 md:pt-20">
+      <main className="pt-[110px] md:pt-[132px]">
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
           <Link to="/products" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
@@ -327,7 +357,12 @@ const ProductDetail = () => {
                 <span className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Iradah</span>
                 <h1 className="font-display text-3xl md:text-4xl mt-1">{product.title}</h1>
                 <p className="text-xl mt-3">
-                  {currentVariant && formatPrice(currentVariant.price.amount, currentVariant.price.currencyCode)}
+                  {currentVariant
+                    ? formatPrice(currentVariant.price.amount, currentVariant.price.currencyCode)
+                    : formatPrice(
+                        product.priceRange.minVariantPrice.amount,
+                        product.priceRange.minVariantPrice.currencyCode,
+                      )}
                 </p>
               </div>
 
@@ -336,7 +371,8 @@ const ProductDetail = () => {
                 {product.options.map((option) => (
                   <div key={option.name}>
                     <label className="text-xs font-medium uppercase tracking-wider mb-3 block">
-                      {option.name}: {selectedOptions[option.name]}
+                      {option.name}
+                      {selectedOptions[option.name] ? `: ${selectedOptions[option.name]}` : ""}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {option.values.map((value) => {
@@ -344,17 +380,15 @@ const ProductDetail = () => {
                         return (
                           <button
                             key={value}
-                            onClick={() => available && handleOptionChange(option.name, value)}
-                            disabled={!available}
-                            aria-disabled={!available}
-                            title={available ? undefined : `${value} - Sold Out`}
+                            onClick={() => handleOptionChange(option.name, value)}
+                            title={available ? undefined : `${value} — Sold out`}
                             className={`px-5 py-2.5 border text-sm transition-colors ${
                               selectedOptions[option.name] === value
                                 ? 'border-foreground bg-foreground text-background'
                                 : 'border-border hover:border-foreground'
                             } ${
                               !available
-                                ? 'opacity-40 cursor-not-allowed line-through decoration-1 hover:border-border'
+                                ? 'opacity-45 line-through decoration-1'
                                 : ''
                             }`}
                           >
@@ -371,6 +405,11 @@ const ProductDetail = () => {
               <div>
                 <label className="text-xs font-medium uppercase tracking-wider mb-3 block">
                   Quantity
+                  {currentVariant?.quantityAvailable != null && currentVariant.quantityAvailable > 0 && (
+                    <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground">
+                      ({currentVariant.quantityAvailable} left)
+                    </span>
+                  )}
                 </label>
                 <div className="flex items-center border border-border w-fit">
                   <button
@@ -381,8 +420,13 @@ const ProductDetail = () => {
                   </button>
                   <span className="w-14 text-center">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-secondary transition-colors"
+                    onClick={() =>
+                      setQuantity((q) =>
+                        maxSelectable == null ? q + 1 : Math.min(maxSelectable, q + 1),
+                      )
+                    }
+                    disabled={maxSelectable != null && quantity >= maxSelectable}
+                    className="w-12 h-12 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -392,10 +436,20 @@ const ProductDetail = () => {
               {/* Add to Cart */}
               <button
                 onClick={handleAddToCart}
-                disabled={!currentVariant?.availableForSale}
+                disabled={
+                  !allOptionsSelected ||
+                  !currentVariant?.availableForSale ||
+                  stockLeft === 0
+                }
                 className="w-full btn-primary h-14 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {currentVariant?.availableForSale ? 'Add to Bag' : 'Sold Out'}
+                {!allOptionsSelected
+                  ? "Select options"
+                  : stockLeft === 0
+                    ? "Max in bag"
+                    : currentVariant?.availableForSale
+                      ? "Add to Bag"
+                      : "Sold Out"}
               </button>
 
               {/* Features */}
@@ -430,6 +484,9 @@ const ProductDetail = () => {
                                 src={imageSrc}
                                 alt={`${product.title} size chart`}
                                 className="w-full border border-border rounded"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
                               />
                             ))}
                           </div>

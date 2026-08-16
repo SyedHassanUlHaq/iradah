@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
+import { AzaadiSaleBanner } from "@/components/AzaadiSaleBanner";
 import { Marquee } from "@/components/Marquee";
 import { CollectionGrid } from "@/components/CollectionGrid";
 import { FeaturedProducts } from "@/components/FeaturedProducts";
@@ -33,6 +34,7 @@ const Index = () => {
       />
       <Navbar />
       <Hero />
+      <AzaadiSaleBanner />
       <Marquee />
       <CollectionGrid />
       <FeaturedProducts />

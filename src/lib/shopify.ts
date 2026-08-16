@@ -37,6 +37,7 @@ export interface ShopifyProduct {
             currencyCode: string;
           };
           availableForSale: boolean;
+          quantityAvailable?: number | null;
           selectedOptions: Array<{
             name: string;
             value: string;
@@ -88,7 +89,7 @@ const STOREFRONT_QUERY = `
               }
             }
           }
-          variants(first: 10) {
+          variants(first: 50) {
             edges {
               node {
                 id
@@ -98,6 +99,7 @@ const STOREFRONT_QUERY = `
                   currencyCode
                 }
                 availableForSale
+                quantityAvailable
                 selectedOptions {
                   name
                   value
@@ -137,7 +139,7 @@ const PRODUCT_BY_HANDLE_QUERY = `
           }
         }
       }
-      variants(first: 20) {
+      variants(first: 50) {
         edges {
           node {
             id
@@ -147,6 +149,7 @@ const PRODUCT_BY_HANDLE_QUERY = `
               currencyCode
             }
             availableForSale
+            quantityAvailable
             selectedOptions {
               name
               value
@@ -193,7 +196,7 @@ const COLLECTION_BY_HANDLE_QUERY = `
                 }
               }
             }
-            variants(first: 10) {
+            variants(first: 50) {
               edges {
                 node {
                   id
@@ -203,6 +206,7 @@ const COLLECTION_BY_HANDLE_QUERY = `
                     currencyCode
                   }
                   availableForSale
+                  quantityAvailable
                   selectedOptions {
                     name
                     value
@@ -295,8 +299,15 @@ export async function storefrontApiRequest(query: string, variables: Record<stri
 
   const data = await response.json();
   
-  if (data.errors) {
-    throw new Error(`Error calling Shopify: ${data.errors.map((e: { message: string }) => e.message).join(', ')}`);
+  if (data.errors?.length) {
+    // GraphQL can return partial data with field-level errors (e.g. missing inventory scope).
+    if (!data.data) {
+      throw new Error(`Error calling Shopify: ${data.errors.map((e: { message: string }) => e.message).join(', ')}`);
+    }
+    console.warn(
+      "Shopify GraphQL field errors:",
+      data.errors.map((e: { message: string }) => e.message).join(", "),
+    );
   }
 
   return data;

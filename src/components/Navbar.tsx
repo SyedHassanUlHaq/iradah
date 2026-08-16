@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Menu, X, Search, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
 import { CartDrawer } from "./CartDrawer";
+import { AzaadiPromoBar } from "./AzaadiPromoBar";
 import { fetchCollections } from "@/lib/shopify";
 
 export const Navbar = () => {
@@ -46,7 +47,8 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40">
+      <nav className="fixed top-0 left-0 z-50 w-screen max-w-[100vw] bg-background/95 backdrop-blur-md border-b border-border/40">
+        <AzaadiPromoBar />
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}

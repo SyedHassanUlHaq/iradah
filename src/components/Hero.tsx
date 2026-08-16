@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import heroImage from "@/assets/hero-image.webp";
+import { AzaadiStamp } from "@/components/AzaadiStamp";
 
 export const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -38,10 +39,10 @@ export const Hero = () => {
             style={{ transform: `translateY(-${scrollY * 0.1}px) scale(1.05)` }}
           />
         </div>
-        {/* Desktop: split layout */}
-        <div className="absolute inset-0 hidden md:flex">
-          <div className="w-1/3 bg-background flex-shrink-0" />
-          <div className="flex-1 relative overflow-hidden">
+        {/* Desktop: split layout — keep in sync with content column width below */}
+        <div className="absolute inset-0 hidden md:grid md:grid-cols-[minmax(0,42%)_minmax(0,58%)]">
+          <div className="bg-background" />
+          <div className="relative overflow-hidden">
             <img
               src={heroImage}
               alt="IRADAH lifestyle collection"
@@ -52,20 +53,30 @@ export const Hero = () => {
         </div>
         {/* Mobile overlay: dark gradient from bottom for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 via-40% to-transparent md:hidden" />
-        {/* Desktop: left gradient fade */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/20 via-10% to-transparent hidden md:block" />
+        {/* Desktop: soft edge fade at the split */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background from-[38%] via-background/40 via-[42%] to-transparent to-[48%] hidden md:block" />
         {/* Bottom fade */}
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
       </div>
 
+      <AzaadiStamp
+        className="absolute top-[118px] right-3 z-10 text-[#0f3d24] opacity-0 animate-fade-in md:hidden"
+        size={112}
+      />
+      <AzaadiStamp
+        className="hidden md:block absolute top-[158px] right-8 z-10 text-[#0f3d24] opacity-0 animate-fade-in"
+        size={156}
+      />
+
+      {/* Content locked to the left column on desktop (same width as white panel) */}
       <div
-        className="container mx-auto px-5 md:px-4 relative z-10 pb-20 md:pb-0 pt-24 transition-opacity duration-100 will-change-[opacity,transform]"
+        className="relative z-10 w-full md:w-[42%] px-5 md:px-8 lg:px-10 xl:px-12 pb-20 md:pb-0 pt-[142px] md:pt-[148px] transition-opacity duration-100 will-change-[opacity,transform]"
         style={{
           opacity: Math.max(1 - scrollY / 500, 0),
           transform: `translateY(${scrollY * 0.05}px)`,
         }}
       >
-        <div className="max-w-xl">
+        <div className="max-w-xl md:max-w-none">
           {/* Brand Name - Large */}
           <div className="opacity-0 animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
             <p className="font-display text-[10px] sm:text-xs uppercase tracking-[0.5em] text-muted-foreground mb-2">
@@ -77,16 +88,16 @@ export const Hero = () => {
           </div>
 
           {/* Main Heading */}
-          <h1 className="font-display text-xl sm:text-3xl md:text-4xl leading-[1.1] tracking-tight mb-4 md:mb-5 opacity-0 animate-fade-in" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
-            Your Wardrobe
-            <span className="italic ml-2">Deserves Better</span>
+          <h1 className="font-display text-xl sm:text-3xl md:text-3xl lg:text-4xl leading-[1.15] tracking-tight mb-4 md:mb-5 opacity-0 animate-fade-in" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
+            Your Wardrobe{" "}
+            <span className="italic">Deserves Better</span>
           </h1>
 
           {/* Divider */}
           <div className="w-12 md:w-16 h-px bg-foreground/30 mb-4 md:mb-5 opacity-0 animate-fade-in" style={{ animationDelay: '0.35s', animationFillMode: 'forwards' }} />
 
           {/* Subheading */}
-          <p className="text-xs md:text-base text-muted-foreground max-w-xs md:max-w-sm mb-6 md:mb-8 opacity-0 animate-fade-in font-light leading-relaxed" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
+          <p className="text-xs md:text-sm lg:text-base text-muted-foreground max-w-xs md:max-w-full mb-6 md:mb-8 opacity-0 animate-fade-in font-light leading-relaxed" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
             Discover curated collections designed in Pakistan with premium fabrics and effortless style.
           </p>
 
@@ -94,12 +105,12 @@ export const Hero = () => {
           <div className="flex flex-wrap items-center gap-2 md:gap-3 opacity-0 animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
             <Link
               to="/products"
-              className="btn-primary flex items-center gap-2 group text-xs md:text-sm px-6 py-3 md:px-8 md:py-4"
+              className="btn-primary flex items-center gap-2 group text-xs md:text-sm px-6 py-3 md:px-7 md:py-3.5 lg:px-8 lg:py-4"
             >
               Shop Collection
               <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link to="/collection/unisex-bottoms" className="btn-outline text-xs md:text-sm px-5 py-3 md:px-8 md:py-4">
+            <Link to="/collection/unisex-bottoms" className="btn-outline text-xs md:text-sm px-5 py-3 md:px-7 md:py-3.5 lg:px-8 lg:py-4">
               Unisex Bottoms
             </Link>
           </div>

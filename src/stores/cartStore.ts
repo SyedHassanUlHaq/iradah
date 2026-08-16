@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { toast } from 'sonner';
 import { ShopifyProduct, createStorefrontCart } from '@/lib/shopify';
 
 export interface CartItem {
@@ -11,6 +12,8 @@ export interface CartItem {
     currencyCode: string;
   };
   quantity: number;
+  /** Max purchasable for this variant; null/undefined = inventory not tracked. */
+  quantityAvailable?: number | null;
   selectedOptions: Array<{
     name: string;
     value: string;
@@ -32,7 +35,7 @@ interface CartStore {
   isOpen: boolean;
 
   // Actions
-  addItem: (item: CartItem) => void;
+  addItem: (item: CartItem) => boolean;
   updateQuantity: (variantId: string, quantity: number) => void;
   removeItem: (variantId: string) => void;
   clearCart: () => void;
@@ -42,9 +45,15 @@ interface CartStore {
   createCheckout: () => Promise<string | null>;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  getVariantQuantityInCart: (variantId: string) => number;
 }
 
 let syncToken = 0;
+
+const getMaxQuantity = (quantityAvailable?: number | null) => {
+  if (quantityAvailable == null || quantityAvailable < 0) return null;
+  return quantityAvailable;
+};
 
 export const useCartStore = create<CartStore>()(
   persist(
@@ -57,22 +66,60 @@ export const useCartStore = create<CartStore>()(
       isLoading: false,
       isOpen: false,
 
+      getVariantQuantityInCart: (variantId) => {
+        return get().items.find((i) => i.variantId === variantId)?.quantity ?? 0;
+      },
+
       addItem: (item) => {
         const { items } = get();
-        const existingItem = items.find(i => i.variantId === item.variantId);
+        const existingItem = items.find((i) => i.variantId === item.variantId);
+        const max = getMaxQuantity(item.quantityAvailable ?? existingItem?.quantityAvailable);
+        const currentQty = existingItem?.quantity ?? 0;
+        const requestedTotal = currentQty + item.quantity;
+
+        let nextQty = requestedTotal;
+        if (max != null && requestedTotal > max) {
+          nextQty = max;
+          if (currentQty >= max) {
+            toast.error("Only a few left", {
+              description: `Only ${max} available for this size/color.`,
+              position: "top-center",
+            });
+            return false;
+          }
+          toast.message("Limited stock", {
+            description: `Only ${max} available — quantity adjusted.`,
+            position: "top-center",
+          });
+        }
+
+        if (nextQty <= 0) return false;
 
         if (existingItem) {
           set({
-            items: items.map(i =>
+            items: items.map((i) =>
               i.variantId === item.variantId
-                ? { ...i, quantity: i.quantity + item.quantity }
-                : i
-            )
+                ? {
+                    ...i,
+                    quantity: nextQty,
+                    quantityAvailable: item.quantityAvailable ?? i.quantityAvailable,
+                  }
+                : i,
+            ),
           });
         } else {
-          set({ items: [...items, item] });
+          set({
+            items: [
+              ...items,
+              {
+                ...item,
+                quantity: nextQty,
+              },
+            ],
+          });
         }
         get().syncCart();
+        return true;
       },
 
       updateQuantity: (variantId, quantity) => {
@@ -81,17 +128,30 @@ export const useCartStore = create<CartStore>()(
           return;
         }
 
+        const item = get().items.find((i) => i.variantId === variantId);
+        if (!item) return;
+
+        const max = getMaxQuantity(item.quantityAvailable);
+        let nextQty = quantity;
+        if (max != null && quantity > max) {
+          nextQty = max;
+          toast.message("Limited stock", {
+            description: `Only ${max} available for this size/color.`,
+            position: "top-center",
+          });
+        }
+
         set({
-          items: get().items.map(item =>
-            item.variantId === variantId ? { ...item, quantity } : item
-          )
+          items: get().items.map((cartItem) =>
+            cartItem.variantId === variantId ? { ...cartItem, quantity: nextQty } : cartItem,
+          ),
         });
         get().syncCart();
       },
 
       removeItem: (variantId) => {
         set({
-          items: get().items.filter(item => item.variantId !== variantId)
+          items: get().items.filter((item) => item.variantId !== variantId),
         });
         get().syncCart();
       },
@@ -118,7 +178,7 @@ export const useCartStore = create<CartStore>()(
         set({ isSyncing: true });
         try {
           const cart = await createStorefrontCart(
-            items.map(item => ({ variantId: item.variantId, quantity: item.quantity }))
+            items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
           );
           if (token !== syncToken) return; // a newer sync superseded this one
           set({
@@ -154,7 +214,10 @@ export const useCartStore = create<CartStore>()(
       },
 
       getTotalPrice: () => {
-        return get().items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
+        return get().items.reduce(
+          (sum, item) => sum + parseFloat(item.price.amount) * item.quantity,
+          0,
+        );
       },
     }),
     {
@@ -166,6 +229,6 @@ export const useCartStore = create<CartStore>()(
           state.syncCart();
         }
       },
-    }
-  )
+    },
+  ),
 );

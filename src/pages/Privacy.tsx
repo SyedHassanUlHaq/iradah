@@ -32,7 +32,7 @@ const Privacy = () => {
         canonical="/privacy"
       />
       <Navbar />
-      <main className="pt-[110px] md:pt-[132px]">
+      <main className="pt-[104px] md:pt-[120px]">
         <header className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-secondary/80 via-background to-accent/40" />
           <div className="relative container mx-auto px-4 py-14 md:py-20">

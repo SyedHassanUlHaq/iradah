@@ -4,8 +4,6 @@ import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { ShopifyProduct, formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
-import { AZAADI } from "@/lib/azaadi";
-import { CrescentStar } from "@/components/CrescentStar";
 import {
   Sheet,
   SheetContent,
@@ -149,15 +147,6 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             {isSoldOut && (
               <div className="absolute top-3 left-3 bg-foreground text-background px-3 py-1 text-[10px] font-medium uppercase tracking-wider">
                 Sold Out
-              </div>
-            )}
-
-            {!isSoldOut && (
-              <div className="absolute top-2.5 right-2.5 rotate-3 bg-[#0f3d24] text-[#fafaf8] pl-2 pr-2.5 py-1 flex items-center gap-1 shadow-sm">
-                <span className="font-display text-xs md:text-sm leading-none tracking-wide">
-                  {AZAADI.badgeLabel}
-                </span>
-                <CrescentStar className="w-2.5 h-2.5 opacity-70" />
               </div>
             )}
           </div>

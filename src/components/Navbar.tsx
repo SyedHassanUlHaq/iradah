@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
 import { CartDrawer } from "./CartDrawer";
-import { AzaadiPromoBar } from "./AzaadiPromoBar";
+import { Marquee } from "./Marquee";
 import { fetchCollections } from "@/lib/shopify";
+
+const bundleMarqueeItems = [
+  "Bundle Discounts are Live",
+  "Save 10% on Any Two Articles",
+  "Save 15% on Any Three Articles",
+  "Save 20% on More Than Three Articles",
+];
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -47,8 +54,8 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 z-50 w-screen max-w-[100vw] bg-background/95 backdrop-blur-md border-b border-border/40">
-        <AzaadiPromoBar />
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40">
+        <Marquee items={bundleMarqueeItems} />
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}

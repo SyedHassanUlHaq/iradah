@@ -82,7 +82,7 @@ const Products = () => {
       />
       <Navbar />
       
-      <main className="pt-16 md:pt-20">
+      <main className="pt-[104px] md:pt-[120px]">
         {/* Hero Banner */}
         <div className="bg-secondary/30 py-16 md:py-24 text-center">
           <div className="container mx-auto px-4">
@@ -95,7 +95,7 @@ const Products = () => {
         </div>
 
         {/* Toolbar */}
-        <div className="sticky top-16 md:top-20 z-40 bg-background border-b border-border">
+        <div className="sticky top-[104px] md:top-[120px] z-40 bg-background border-b border-border">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">

@@ -1,15 +1,11 @@
-export const Marquee = () => {
-  const items = [
-    "Free Shipping on Orders Over PKR 5,000",
-    "Premium Quality Fabrics",
-    "Made in Pakistan",
-    "New Arrivals Weekly",
-    "Cash on Delivery Available",
-    "Easy 7-Day Returns",
-  ];
+interface MarqueeProps {
+  items: string[];
+  className?: string;
+}
 
+export const Marquee = ({ items, className = "" }: MarqueeProps) => {
   return (
-    <div className="bg-foreground text-background py-2.5 overflow-hidden">
+    <div className={`bg-foreground text-background py-2.5 overflow-hidden ${className}`}>
       <div className="flex whitespace-nowrap">
         <div className="marquee flex items-center">
           {[...items, ...items].map((item, index) => (

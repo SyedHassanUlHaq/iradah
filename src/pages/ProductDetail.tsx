@@ -233,7 +233,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-20 flex items-center justify-center min-h-[60vh]">
+        <div className="pt-[104px] md:pt-[120px] flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
         <Footer />
@@ -245,7 +245,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-20 flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="pt-[104px] md:pt-[120px] flex flex-col items-center justify-center min-h-[60vh]">
           <p className="text-muted-foreground">Product not found</p>
           <Link to="/products" className="btn-primary mt-6">
             Back to Products
@@ -301,7 +301,7 @@ const ProductDetail = () => {
         ]}
       />
       <Navbar />
-      <main className="pt-[110px] md:pt-[132px]">
+      <main className="pt-[104px] md:pt-[120px]">
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
           <Link to="/products" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
@@ -352,7 +352,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Product Info */}
-            <div className="space-y-6 lg:sticky lg:top-28 lg:self-start">
+            <div className="space-y-6 lg:sticky lg:top-[152px] lg:self-start">
               <div>
                 <span className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Iradah</span>
                 <h1 className="font-display text-3xl md:text-4xl mt-1">{product.title}</h1>

@@ -102,9 +102,25 @@
     @apply border-border;
   }
 
+  html {
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--foreground) / 0.3) transparent;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-family: var(--font-body);
+    overflow-x: hidden;
+    /* 100vw includes the scrollbar gutter so full-bleed media reaches the window edge */
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -224,20 +240,25 @@
   .stagger-4 { animation-delay: 0.4s; }
 }
 
-/* Custom scrollbar */
+/* Overlay-style scrollbar — avoid a solid light gutter beside full-bleed heroes */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 3px;
+  background: hsl(var(--foreground) / 0.25);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: hsl(var(--foreground) / 0.4);
+  border: 2px solid transparent;
+  background-clip: content-box;
 }

@@ -47,7 +47,15 @@ const collectionHandleMap: Record<string, string> = {
 };
 
 function splitDescription(text: string): string[] {
-  const normalized = text.replace(/\r\n/g, "\n").trim();
+  const normalized = text
+    .replace(/\r\n/g, "\n")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    // Shopify sometimes omits the space after a period between sentences.
+    .replace(/([.!?])([A-Za-z])/g, "$1 $2")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
   if (!normalized) return [];
 
   const byBreak = normalized
@@ -57,9 +65,10 @@ function splitDescription(text: string): string[] {
   if (byBreak.length > 1) return byBreak;
 
   const sentences =
-    normalized.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g)?.map((s) => s.trim()).filter(Boolean) ??
+    normalized.match(/[^.!?]+[.!?]+(?:\s+|$)|[^.!?]+$/g)?.map((s) => s.trim()).filter(Boolean) ??
     [normalized];
 
+  // Keep readable paragraph chunks without dropping sentences.
   const paragraphs: string[] = [];
   for (let i = 0; i < sentences.length; i += 2) {
     paragraphs.push(sentences.slice(i, i + 2).join(" "));
@@ -68,7 +77,11 @@ function splitDescription(text: string): string[] {
 }
 
 function getTeaser(text: string, maxLen = 160): string {
-  const firstSentence = text.split(/(?<=[.!?])\s+/)[0]?.trim() || text.trim();
+  const normalized = text
+    .replace(/&nbsp;/gi, " ")
+    .replace(/([.!?])([A-Za-z])/g, "$1 $2")
+    .trim();
+  const firstSentence = normalized.split(/(?<=[.!?])\s+/)[0]?.trim() || normalized;
   if (firstSentence.length <= maxLen) return firstSentence;
   return `${firstSentence.slice(0, maxLen - 1).trimEnd()}…`;
 }

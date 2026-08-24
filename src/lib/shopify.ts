@@ -13,8 +13,20 @@ export interface ShopifyProduct {
     descriptionHtml?: string;
     handle: string;
     createdAt: string;
+    productType?: string;
+    tags?: string[];
     priceRange: {
       minVariantPrice: {
+        amount: string;
+        currencyCode: string;
+      };
+    };
+    compareAtPriceRange?: {
+      minVariantPrice: {
+        amount: string;
+        currencyCode: string;
+      };
+      maxVariantPrice: {
         amount: string;
         currencyCode: string;
       };
@@ -49,6 +61,14 @@ export interface ShopifyProduct {
       name: string;
       values: string[];
     }>;
+    collections?: {
+      edges: Array<{
+        node: {
+          handle: string;
+          title: string;
+        };
+      }>;
+    };
   };
 }
 
@@ -66,8 +86,8 @@ export interface ShopifyCollection {
 }
 
 const STOREFRONT_QUERY = `
-  query GetProducts($first: Int!, $query: String) {
-    products(first: $first, query: $query) {
+  query GetProducts($first: Int!, $query: String, $sortKey: ProductSortKeys, $reverse: Boolean) {
+    products(first: $first, query: $query, sortKey: $sortKey, reverse: $reverse) {
       edges {
         node {
           id
@@ -75,8 +95,20 @@ const STOREFRONT_QUERY = `
           description
           handle
           createdAt
+          productType
+          tags
           priceRange {
             minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          compareAtPriceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+            maxVariantPrice {
               amount
               currencyCode
             }
@@ -111,6 +143,26 @@ const STOREFRONT_QUERY = `
             name
             values
           }
+          collections(first: 10) {
+            edges {
+              node {
+                handle
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const PRODUCT_SORT_IDS_QUERY = `
+  query GetProductSortIds($first: Int!, $sortKey: ProductSortKeys!, $reverse: Boolean) {
+    products(first: $first, sortKey: $sortKey, reverse: $reverse) {
+      edges {
+        node {
+          id
         }
       }
     }
@@ -313,10 +365,34 @@ export async function storefrontApiRequest(query: string, variables: Record<stri
   return data;
 }
 
-export async function fetchProducts(first: number = 100, query?: string): Promise<ShopifyProduct[]> {
-  const data = await storefrontApiRequest(STOREFRONT_QUERY, { first, query });
+export async function fetchProducts(
+  first: number = 100,
+  query?: string,
+  sortKey?: string,
+  reverse?: boolean,
+): Promise<ShopifyProduct[]> {
+  const variables: Record<string, unknown> = { first, query };
+  if (sortKey) {
+    variables.sortKey = sortKey;
+    variables.reverse = reverse ?? false;
+  }
+  const data = await storefrontApiRequest(STOREFRONT_QUERY, variables);
   if (!data) return [];
   return data.data.products.edges;
+}
+
+export async function fetchProductIdsBySort(
+  first: number = 100,
+  sortKey: string,
+  reverse = false,
+): Promise<string[]> {
+  const data = await storefrontApiRequest(PRODUCT_SORT_IDS_QUERY, {
+    first,
+    sortKey,
+    reverse,
+  });
+  if (!data) return [];
+  return data.data.products.edges.map((edge: { node: { id: string } }) => edge.node.id);
 }
 
 const COLLECTIONS_QUERY = `
